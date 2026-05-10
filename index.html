@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>유앤어스 상담 시스템</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Apple SD Gothic Neo',Helvetica,sans-serif;background:#f5f3ef;color:#1a1814;font-size:15px;}
+button,input,textarea,select{font-family:inherit;font-size:inherit;-webkit-appearance:none;appearance:none;}
+
+.tabs{display:flex;background:#fff;border-bottom:2px solid #eee;position:sticky;top:0;z-index:10;}
+.tab{flex:1;padding:16px 4px;text-align:center;font-size:13px;font-weight:500;color:#999;border:none;background:none;cursor:pointer;}
+.tab.on{color:#2c2820;border-bottom:3px solid #2c2820;margin-bottom:-2px;}
+
+.section{display:none;padding:16px;}
+.section.on{display:block;}
+
+.field{margin-bottom:14px;}
+.lbl{font-size:12px;color:#666;margin-bottom:6px;display:block;font-weight:500;}
+.inp{width:100%;padding:11px 12px;border:1px solid #ccc;border-radius:8px;font-size:14px;background:#fff;}
+.inp:focus{border-color:#2c2820;outline:none;}
+textarea.inp{resize:none;line-height:1.6;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
+.chip{padding:8px 14px;border:1px solid #ccc;border-radius:20px;font-size:13px;color:#555;background:#fff;cursor:pointer;display:inline-block;}
+.chip.on{background:#2c2820;border-color:#2c2820;color:#fff;}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;}
+.bg{background:#edf4ef;color:#4a7c59;}
+.br{background:#fdf0ee;color:#c0392b;}
+.bb{background:#eef3fb;color:#2a5fa5;}
+.ba{background:#fdf6e8;color:#b07d2a;}
+
+.btn{display:block;width:100%;padding:14px;border-radius:8px;font-size:15px;font-weight:600;border:none;cursor:pointer;margin-top:8px;text-align:center;}
+.btn-dark{background:#2c2820;color:#fff;}
+.btn-outline{background:#fff;color:#2c2820;border:1px solid #ccc;}
+.btn-gold{background:#b8975a;color:#fff;border:none;}
+.btn-sm{display:inline-block;width:auto;padding:8px 14px;font-size:13px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;}
+
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.07);cursor:pointer;}
+.card-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+.card-sub{font-size:12px;color:#999;}
+.card-row{display:flex;justify-content:space-between;align-items:flex-start;}
+
+.dash-header{background:#2c2820;color:#fff;padding:20px 16px 16px;margin:-16px -16px 16px;}
+.dash-date{font-size:22px;font-weight:600;margin-top:4px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+.stat-n{font-size:26px;font-weight:700;color:#2c2820;}
+.stat-l{font-size:11px;color:#999;margin-top:3px;}
+.stat-s{font-size:12px;color:#b8975a;margin-top:5px;}
+
+.sync{display:flex;align-items:center;gap:8px;padding:10px 0;font-size:12px;margin-bottom:12px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.dot-g{background:#4a7c59;}
+.dot-y{background:#b07d2a;}
+
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#2c2820;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;z-index:9999;white-space:nowrap;pointer-events:none;}
+
+.sec-title{font-size:10px;font-weight:700;color:#999;letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;}
+.spacer{height:40px;}
+
+#detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;}
+#detail-panel{position:absolute;bottom:0;left:0;right:0;background:#f5f3ef;border-radius:16px 16px 0 0;max-height:85vh;overflow-y:auto;padding:16px;}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button type="button" class="tab on" onclick="showTab('dash')">대시보드</button>
+  <button type="button" class="tab" onclick="showTab('form')">상담등록</button>
+  <button type="button" class="tab" onclick="showTab('list')">목록</button>
+  <button type="button" class="tab" onclick="showTab('sample')">샘플</button>
+</div>
+
+<!-- 대시보드 -->
+<div class="section on" id="tab-dash">
+  <div class="dash-header">
+    <div style="font-size:12px;opacity:.6;letter-spacing:.5px;">YOUANDUS SHOWROOM</div>
+    <div class="dash-date" id="d-date"></div>
+    <div style="font-size:13px;opacity:.7;margin-top:4px;">오늘 <span id="d-today">0</span>건 · 이번달 계약률 <span id="d-rate">—</span></div>
+  </div>
+  <div class="sync"><span class="dot dot-g"></span><span>구글 시트 연결됨 — 저장 시 자동 전송</span></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n" id="d-total">0</div><div class="stat-l">이번달 상담</div><div class="stat-s" id="d-tsub">—</div></div>
+    <div class="stat"><div class="stat-n" id="d-con">0</div><div class="stat-l">계약 완료</div><div class="stat-s" id="d-csub">—</div></div>
+    <div class="stat"><div class="stat-n" id="d-pend">0</div><div class="stat-l">미결정 고객</div><div class="stat-s" style="color:#c0392b;">후속 연락 필요</div></div>
+    <div class="stat"><div class="stat-n" id="d-avg">—</div><div class="stat-l">평균 견적</div><div class="stat-s" id="d-asub">만원</div></div>
+  </div>
+  <div class="sec-title">🔔 오늘 후속 연락</div>
+  <div id="d-followup"><div style="color:#999;font-size:13px;padding:8px 0;">없음</div></div>
+  <div class="sec-title">🏆 인기 제품 TOP 5</div>
+  <div class="card" style="cursor:default;" id="d-popular"><div style="color:#999;font-size:13px;">데이터 없음</div></div>
+  <div class="sec-title">📊 미구매 사유</div>
+  <div class="card" style="cursor:default;" id="d-reason"><div style="color:#999;font-size:13px;">데이터 없음</div></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- 상담 등록 -->
+<div class="section" id="tab-form">
+  <div class="field"><div class="lbl">고객명 *</div><input type="text" class="inp" id="f-name" placeholder="홍길동"></div>
+  <div class="field"><div class="lbl">연락처 *</div><input type="tel" class="inp" id="f-phone" placeholder="010-0000-0000"></div>
+
+  <div class="field"><div class="lbl">고객 유형</div><div class="chips" id="c-type"></div></div>
+  <div class="field"><div class="lbl">상담 목적</div><div class="chips" id="c-purpose"></div></div>
+  <div class="field"><div class="lbl">공간 (중복가능)</div><div class="chips" id="c-space"></div></div>
+  <div class="field"><div class="lbl">평형</div><div class="chips" id="c-size"></div></div>
+  <div class="field"><div class="lbl">예산</div><div class="chips" id="c-budget"></div></div>
+  <div class="field"><div class="lbl">선호 스타일</div><div class="chips" id="c-style"></div></div>
+  <div class="field"><div class="lbl">선호 컬러</div><div class="chips" id="c-color"></div></div>
+  <div class="field"><div class="lbl">관심 소재</div><div class="chips" id="c-material"></div></div>
+  <div class="field"><div class="lbl">반려동물/아이</div><div class="chips" id="c-kids"></div></div>
+
+  <div class="sec-title">관심 제품</div>
+  <div class="card" style="cursor:default;">
+    <div id="prod-list">
+      <div class="prod-item">
+        <div class="row2">
+          <div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" placeholder="YOUANDUS"></div>
+          <div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" placeholder="Calm Beige 01"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" placeholder="베이지"></div>
+          <div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" placeholder="2000×3000"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="1"></div>
+          <div class="field"><div class="lbl">견적금액</div><input type="text" class="inp prod-price" placeholder="2,800,000"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button type="button" class="btn-sm" onclick="addProd()">+ 직접 추가</button>
+      <button type="button" class="btn-sm" onclick="openCalculator()" style="background:#2c2820;color:#fff;border-color:#2c2820;">✦ 견적 계산기로 담기</button>
+    </div>
+  </div>
+
+  <div class="field"><div class="lbl">구매 가능성</div><div class="chips" id="c-prob"></div></div>
+  <div class="field"><div class="lbl">다음 액션</div><div class="chips" id="c-action"></div></div>
+  <div class="field"><div class="lbl">미구매 사유</div><div class="chips" id="c-reason"></div></div>
+  <div class="field"><div class="lbl">담당 직원</div><div class="chips" id="c-staff"></div></div>
+  <div class="field"><div class="lbl">후속 연락 예정일</div><input type="date" class="inp" id="f-followup"></div>
+  <div class="field"><div class="lbl">메모</div><textarea class="inp" id="f-memo" rows="3" placeholder="상담 특이사항..."></textarea></div>
+
+  <div class="sec-title">개인정보 동의</div>
+  <div style="background:#f0ede8;border-radius:8px;padding:12px;font-size:12px;color:#555;line-height:1.7;margin-bottom:12px;">
+    수집 목적: 러그/카펫 상담, 견적 안내, 샘플 발송<br>
+    수집 항목: 이름, 연락처, 상담 내용, 견적 정보<br>
+    보유 기간: 상담일로부터 1년
+  </div>
+  <div class="field"><div class="lbl">상담 정보 수집 동의 *</div><div class="chips" id="c-consent"></div></div>
+  <div class="field"><div class="lbl">마케팅 수신 동의 (선택)</div><div class="chips" id="c-marketing"></div></div>
+
+  <div class="row2" style="gap:10px;margin-top:8px;">
+    <button type="button" class="btn btn-outline" onclick="saveConsult('보류')">임시저장</button>
+    <button type="button" class="btn btn-dark" onclick="saveConsult('신규')">저장 완료</button>
+  </div>
+  <button type="button" class="btn btn-outline" onclick="clearForm()" style="margin-top:8px;color:#999;">초기화</button>
+  <div class="spacer"></div>
+</div>
+
+<!-- 목록 -->
+<div class="section" id="tab-list">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span id="list-count" style="font-size:13px;color:#999;">총 0건</span>
+    <button type="button" class="btn-sm btn-gold" onclick="exportCSV()">엑셀 내보내기</button>
+  </div>
+  <div class="chips" style="margin-bottom:12px;">
+    <span class="chip on" onclick="filterList('전체',this)">전체</span>
+    <span class="chip" onclick="filterList('신규',this)">신규</span>
+    <span class="chip" onclick="filterList('견적발송',this)">견적발송</span>
+    <span class="chip" onclick="filterList('샘플발송',this)">샘플발송</span>
+    <span class="chip" onclick="filterList('보류',this)">보류</span>
+    <span class="chip" onclick="filterList('계약',this)">계약</span>
+    <span class="chip" onclick="filterList('실패',this)">실패</span>
+  </div>
+  <div id="consult-list"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- 샘플 -->
+<div class="section" id="tab-sample">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <span id="sample-count" style="font-size:13px;color:#999;">대여중 0건</span>
+    <button type="button" class="btn-sm btn-gold" onclick="toggleSampleForm()">+ 대여 등록</button>
+  </div>
+  <div id="sample-form" style="display:none;background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.07);">
+    <div class="row2">
+      <div class="field"><div class="lbl">샘플명 *</div><input type="text" class="inp" id="s-name" placeholder="Calm Beige 샘플"></div>
+      <div class="field"><div class="lbl">코드</div><input type="text" class="inp" id="s-code" placeholder="SMP-001"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><div class="lbl">대여 고객 *</div><input type="text" class="inp" id="s-cust" placeholder="홍길동"></div>
+      <div class="field"><div class="lbl">연락처</div><input type="tel" class="inp" id="s-phone" placeholder="010-0000-0000"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><div class="lbl">대여일</div><input type="date" class="inp" id="s-lend"></div>
+      <div class="field"><div class="lbl">반납 예정일 *</div><input type="date" class="inp" id="s-ret"></div>
+    </div>
+    <div class="field"><div class="lbl">담당 직원</div><input type="text" class="inp" id="s-staff" placeholder="김지수"></div>
+    <div class="row2" style="gap:10px;margin-top:4px;">
+      <button type="button" class="btn btn-outline" onclick="toggleSampleForm()">취소</button>
+      <button type="button" class="btn btn-dark" onclick="saveSample()">등록</button>
+    </div>
+  </div>
+  <div id="sample-list"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- 상세 모달 -->
+<div id="detail-overlay" onclick="closeDetail()">
+  <div id="detail-panel" onclick="event.stopPropagation()">
+    <div style="width:36px;height:4px;background:#ccc;border-radius:2px;margin:0 auto 16px;"></div>
+    <div id="detail-title" style="font-size:17px;font-weight:600;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #eee;"></div>
+    <div id="detail-body"></div>
+    <div style="margin-top:16px;">
+      <div style="font-size:12px;color:#999;margin-bottom:8px;">상태 변경</div>
+      <div class="chips" id="detail-status"></div>
+    </div>
+    <button type="button" class="btn btn-outline" onclick="closeDetail()" style="margin-top:16px;">닫기</button>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var SCRIPT_URL='https://script.google.com/macros/s/AKfycbzkckPohQ8_zmXptBFJ9iRazjRbTXyQ_FRxfQf0lDXfHP-OqIlLPcW_fw1BqMWa8lCt/exec';
+var consults=JSON.parse(localStorage.getItem('yu_c')||'[]');
+var samples=JSON.parse(localStorage.getItem('yu_s')||'[]');
+var listFilter='전체';
+var detailId=null;
+var prodCount=1;
+var sampleFormOpen=false;
+
+var CHIP_CFG={
+  'c-type':    {m:true, v:['개인','인테리어사','건설사','호텔','리테일 브랜드']},
+  'c-purpose': {m:true, v:['신규 입주','리모델링','교체','선물','프로젝트 납품']},
+  'c-space':   {m:true, v:['거실','침실','다이닝','현관','복도','상업공간']},
+  'c-size':    {m:false,v:['20평대','30평대','40평대','50평대','60평 이상']},
+  'c-budget':  {m:false,v:['50만 이하','100만대','300만대','500만 이상']},
+  'c-style':   {m:true, v:['미니멀','호텔식','내추럴','이탈리안 럭셔리','한국적 여백','키즈']},
+  'c-color':   {m:true, v:['아이보리','베이지','브라운','차콜','블루','그린','기타']},
+  'c-material':{m:true, v:['울','텐셀','나일론','혼방','방수/발수','미정']},
+  'c-kids':    {m:false,v:['아이 있음','반려동물 있음','모두 있음','없음']},
+  'c-prob':    {m:false,v:['상','중','하']},
+  'c-action':  {m:true, v:['견적서 발송','샘플 발송','재고 확인','실측 필요','재방문 예약']},
+  'c-reason':  {m:true, v:['가격','납기','컬러','사이즈','가족 상의','타사 비교','미정']},
+  'c-staff':   {m:false,v:['A직원','B직원','C직원','대표']},
+  'c-consent': {m:false,v:['동의합니다','동의하지 않습니다']},
+  'c-marketing':{m:false,v:['동의합니다','동의하지 않습니다']},
+};
+var CS={};
+
+function initChips(){
+  Object.keys(CHIP_CFG).forEach(function(id){
+    var cfg=CHIP_CFG[id];
+    CS[id]=cfg.m?[]:'';
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML=cfg.v.map(function(v){
+      return '<span class="chip" onclick="tapChip(this,\''+id+'\','+cfg.m+',\''+v+'\')">'+v+'</span>';
+    }).join('');
+  });
+}
+
+function tapChip(el,id,multi,v){
+  if(multi){
+    el.classList.toggle('on');
+    var i=CS[id].indexOf(v);
+    if(i===-1)CS[id].push(v); else CS[id].splice(i,1);
+  } else {
+    var chips=document.querySelectorAll('#'+id+' .chip');
+    for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
+    el.classList.add('on');
+    CS[id]=v;
+  }
+}
+
+function resetChips(){
+  Object.keys(CHIP_CFG).forEach(function(id){
+    var cfg=CHIP_CFG[id];
+    CS[id]=cfg.m?[]:'';
+    var chips=document.querySelectorAll('#'+id+' .chip');
+    for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
+  });
+}
+
+function showTab(name){
+  var sections=document.querySelectorAll('.section');
+  for(var i=0;i<sections.length;i++)sections[i].classList.remove('on');
+  var tabs=document.querySelectorAll('.tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.remove('on');
+  document.getElementById('tab-'+name).classList.add('on');
+  var tab=document.querySelector('.tab[onclick="showTab(\''+name+'\')"]');
+  if(tab)tab.classList.add('on');
+  if(name==='dash')renderDash();
+  if(name==='list')renderList();
+  if(name==='sample')renderSamples();
+}
+
+function sendToSheet(action,payload){
+  try{
+    var p=new URLSearchParams({action:action,payload:JSON.stringify(payload)});
+    var img=new Image();
+    img.src=SCRIPT_URL+'?'+p.toString()+'&t='+Date.now();
+  }catch(e){}
+}
+
+function getProds(){
+  var items=document.querySelectorAll('.prod-item');
+  var result=[];
+  for(var i=0;i<items.length;i++){
+    var el=items[i];
+    var brand=el.querySelector('.prod-brand');
+    var pname=el.querySelector('.prod-pname');
+    var color=el.querySelector('.prod-color');
+    var size=el.querySelector('.prod-size');
+    var qty=el.querySelector('.prod-qty');
+    var price=el.querySelector('.prod-price');
+    var obj={
+      brand:brand?brand.value:'',
+      name:pname?pname.value:'',
+      color:color?color.value:'',
+      size:size?size.value:'',
+      qty:qty?qty.value:'1',
+      price:price?price.value:'',
+    };
+    if(obj.brand||obj.name)result.push(obj);
+  }
+  return result;
+}
+
+function addProd(){
+  prodCount++;
+  var d=document.createElement('div');
+  d.className='prod-item';
+  d.style.cssText='margin-top:12px;padding-top:12px;border-top:1px solid #eee;';
+  var n=prodCount;
+  d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><span style="font-size:13px;font-weight:600;color:#666;">제품 '+n+'</span><button type="button" class="btn-sm" style="color:#c0392b;font-size:12px;" onclick="this.closest(\'.prod-item\').remove()">삭제</button></div>'
+    +'<div class="row2"><div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" placeholder="YOUANDUS"></div><div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" placeholder="제품명"></div></div>'
+    +'<div class="row2"><div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" placeholder="컬러"></div><div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" placeholder="2000×3000"></div></div>'
+    +'<div class="row2"><div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="1"></div><div class="field"><div class="lbl">견적금액</div><input type="text" class="inp prod-price" placeholder="0"></div></div>';
+  document.getElementById('prod-list').appendChild(d);
+}
+
+function saveConsult(status){
+  var name=document.getElementById('f-name').value.trim();
+  if(!name){toast('고객명을 입력해 주세요');return;}
+  if(!CS['c-consent']){toast('개인정보 동의를 선택해 주세요');return;}
+  var now=new Date();
+  var rec={
+    id:Date.now(),
+    date:now.toISOString().slice(0,10),
+    time:(now.getHours()<10?'0':'')+now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes(),
+    status:status,name:name,
+    phone:document.getElementById('f-phone').value,
+    type:CS['c-type'].join('/'),purpose:CS['c-purpose'].join('/'),
+    space:CS['c-space'].join('/'),size:CS['c-size'],budget:CS['c-budget'],
+    style:CS['c-style'].join('/'),color:CS['c-color'].join('/'),
+    material:CS['c-material'].join('/'),kids:CS['c-kids'],
+    products:getProds(),prob:CS['c-prob'],
+    action:CS['c-action'].join('/'),reason:CS['c-reason'].join('/'),
+    staff:CS['c-staff'],
+    followup:document.getElementById('f-followup').value,
+    memo:document.getElementById('f-memo').value,
+    consent:CS['c-consent'],marketing:CS['c-marketing'],
+  };
+  consults.unshift(rec);
+  localStorage.setItem('yu_c',JSON.stringify(consults));
+  sendToSheet('saveConsult',rec);
+  toast('저장 완료 ✓');
+  clearForm();
+  renderDash();
+}
+
+function clearForm(){
+  document.getElementById('f-name').value='';
+  document.getElementById('f-phone').value='';
+  document.getElementById('f-memo').value='';
+  document.getElementById('f-followup').value=new Date(Date.now()+172800000).toISOString().slice(0,10);
+  resetChips();
+  document.getElementById('prod-list').innerHTML='<div class="prod-item">'
+    +'<div class="row2"><div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" placeholder="YOUANDUS"></div><div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" placeholder="Calm Beige 01"></div></div>'
+    +'<div class="row2"><div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" placeholder="베이지"></div><div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" placeholder="2000×3000"></div></div>'
+    +'<div class="row2"><div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="1"></div><div class="field"><div class="lbl">견적금액</div><input type="text" class="inp prod-price" placeholder="2,800,000"></div></div>'
+    +'</div>';
+  prodCount=1;
+}
+
+function filterList(f,el){
+  listFilter=f;
+  var chips=document.querySelectorAll('#tab-list .chips .chip');
+  for(var i=0;i<chips.length;i++)chips[i].classList.remove('on');
+  el.classList.add('on');
+  renderList();
+}
+
+function renderList(){
+  var arr=listFilter==='전체'?consults:consults.filter(function(c){return c.status===listFilter;});
+  document.getElementById('list-count').textContent='총 '+arr.length+'건';
+  var el=document.getElementById('consult-list');
+  if(!arr.length){el.innerHTML='<div style="color:#999;text-align:center;padding:30px;font-size:13px;">해당 상담이 없습니다</div>';return;}
+  var SC={신규:'bb',보류:'ba',견적발송:'bg',샘플발송:'bg',계약:'bg',실패:'br'};
+  var PC={상:'bg',중:'ba',하:'br'};
+  el.innerHTML=arr.map(function(c){
+    var total=(c.products||[]).reduce(function(s,p){return s+parseInt((p.price||'0').replace(/[^0-9]/g,''));},0);
+    return '<div class="card" onclick="showDetail('+c.id+')">'
+      +'<div class="card-row"><div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span class="card-title">'+c.name+'</span><span class="badge '+(SC[c.status]||'ba')+'">'+c.status+'</span>'+(c.prob?'<span class="badge '+(PC[c.prob]||'ba')+'">'+c.prob+'</span>':'')+'</div>'
+      +'<div class="card-sub">'+(c.type||'')+' '+(c.space?'· '+c.space:'')+'</div>'
+      +(c.followup?'<div style="font-size:11px;color:#b07d2a;margin-top:4px;">📅 '+c.followup+'</div>':'')
+      +'</div><div style="text-align:right;">'
+      +'<div style="font-size:15px;font-weight:600;">'+(total?total.toLocaleString()+'원':'')+'</div>'
+      +'<div class="card-sub">'+c.date+'</div>'
+      +'<div class="card-sub">'+(c.staff||'')+'</div>'
+      +'</div></div></div>';
+  }).join('');
+}
+
+function showDetail(id){
+  var c=null;
+  for(var i=0;i<consults.length;i++){if(consults[i].id===id){c=consults[i];break;}}
+  if(!c)return;
+  detailId=id;
+  document.getElementById('detail-title').textContent=c.name+' 상담 상세';
+  var prods=(c.products||[]).filter(function(p){return p.name||p.brand;}).map(function(p){
+    return '<div style="background:#f0ede8;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px;"><b>'+p.brand+' '+p.name+'</b><br><span style="color:#999;">'+p.color+' · '+p.size+' · '+p.qty+'개 · '+p.price+'원</span></div>';
+  }).join('');
+  function r(l,v){return v?'<tr><td style="color:#999;font-size:12px;padding:4px 0;width:70px;vertical-align:top;">'+l+'</td><td style="font-size:13px;padding:4px 0;font-weight:500;">'+v+'</td></tr>':'';}
+  document.getElementById('detail-body').innerHTML=
+    '<table style="width:100%;border-collapse:collapse;">'
+    +r('상담일',c.date+' '+c.time)+r('연락처',c.phone)+r('고객유형',c.type)
+    +r('공간',c.space)+r('평형',c.size)+r('예산',c.budget)
+    +r('스타일',c.style)+r('다음액션',c.action)+r('미구매사유',c.reason)
+    +r('담당직원',c.staff)+r('후속연락',c.followup)
+    +'</table>'
+    +(prods?'<div style="margin-top:10px;">'+prods+'</div>':'')
+    +(c.memo?'<div style="margin-top:10px;background:#fdf6e8;border-radius:8px;padding:10px;font-size:13px;">📝 '+c.memo+'</div>':'');
+  var statuses=['신규','견적발송','샘플발송','재방문','보류','계약','실패'];
+  document.getElementById('detail-status').innerHTML=statuses.map(function(s){
+    return '<span class="chip '+(c.status===s?'on':'')+'" onclick="updateStatus('+id+',\''+s+'\')">'+s+'</span>';
+  }).join('');
+  document.getElementById('detail-overlay').style.display='block';
+}
+
+function closeDetail(){document.getElementById('detail-overlay').style.display='none';}
+
+function updateStatus(id,status){
+  for(var i=0;i<consults.length;i++){
+    if(consults[i].id===id){consults[i].status=status;break;}
+  }
+  localStorage.setItem('yu_c',JSON.stringify(consults));
+  sendToSheet('updateStatus',{id:id,status:status});
+  toast('"'+status+'"로 변경됨');
+  showDetail(id);
+  renderList();
+}
+
+function renderDash(){
+  var now=new Date();
+  var today=now.toISOString().slice(0,10);
+  var month=today.slice(0,7);
+  document.getElementById('d-date').textContent=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
+  var tm=consults.filter(function(c){return c.date&&c.date.slice(0,7)===month;});
+  var td=consults.filter(function(c){return c.date===today;});
+  var con=tm.filter(function(c){return c.status==='계약';});
+  var pend=tm.filter(function(c){return c.status==='신규'||c.status==='보류';});
+  var rate=tm.length?Math.round(con.length/tm.length*100):0;
+  document.getElementById('d-today').textContent=td.length;
+  document.getElementById('d-rate').textContent=rate+'%';
+  document.getElementById('d-total').textContent=tm.length;
+  document.getElementById('d-tsub').textContent='오늘 '+td.length+'건';
+  document.getElementById('d-con').textContent=con.length;
+  document.getElementById('d-csub').textContent='전환율 '+rate+'%';
+  document.getElementById('d-pend').textContent=pend.length;
+  var prices=tm.map(function(c){return(c.products||[]).reduce(function(s,p){return s+parseInt((p.price||'0').replace(/[^0-9]/g,''));},0);}).filter(function(v){return v>0;});
+  var avg=prices.length?Math.round(prices.reduce(function(a,b){return a+b;},0)/prices.length/10000):0;
+  document.getElementById('d-avg').textContent=avg||'—';
+  document.getElementById('d-asub').textContent=avg?'만원 평균':'데이터 없음';
+  var fu=consults.filter(function(c){return c.followup&&c.followup<=today&&c.status!=='계약'&&c.status!=='실패';}).sort(function(a,b){return a.followup.localeCompare(b.followup);});
+  document.getElementById('d-followup').innerHTML=fu.length?fu.slice(0,5).map(function(c){return'<div class="card" onclick="showDetail('+c.id+')" style="margin-bottom:8px;"><div class="card-row"><div><div class="card-title">'+c.name+'</div><div class="card-sub">'+(c.action||'—')+'</div></div><span class="badge '+(c.followup<today?'br':'ba')+'">'+(c.followup<today?'지연':'오늘')+'</span></div></div>';}).join(''):'<div style="color:#999;font-size:13px;padding:8px 0;">오늘 후속 연락 없음 👍</div>';
+  var pc={};
+  consults.forEach(function(c){(c.products||[]).forEach(function(p){var k=(p.brand+' '+p.name).trim();if(k)pc[k]=(pc[k]||0)+1;});});
+  var sp=Object.keys(pc).map(function(k){return[k,pc[k]];}).sort(function(a,b){return b[1]-a[1];});
+  document.getElementById('d-popular').innerHTML=sp.length?sp.slice(0,5).map(function(item,i){return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #eee;"><span style="width:20px;height:20px;border-radius:50%;background:'+(i===0?'#b8975a':'#eee')+';color:'+(i===0?'#fff':'#666')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">'+(i+1)+'</span><span style="flex:1;font-size:13px;">'+item[0]+'</span><span style="font-size:13px;font-weight:600;color:#666;">'+item[1]+'</span></div>';}).join(''):'<div style="color:#999;font-size:13px;">데이터 없음</div>';
+  var rc={};
+  consults.forEach(function(c){if(c.reason)c.reason.split('/').forEach(function(r){if(r)rc[r]=(rc[r]||0)+1;});});
+  var sr=Object.keys(rc).map(function(k){return[k,rc[k]];}).sort(function(a,b){return b[1]-a[1];});
+  var mx=sr.length?sr[0][1]:1;
+  document.getElementById('d-reason').innerHTML=sr.length?sr.map(function(item){return'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;"><span style="width:60px;font-size:12px;color:#666;flex-shrink:0;">'+item[0]+'</span><div style="flex:1;height:4px;background:#eee;border-radius:2px;"><div style="height:4px;border-radius:2px;background:#b8975a;width:'+Math.round(item[1]/mx*100)+'%"></div></div><span style="font-size:12px;font-weight:600;color:#666;min-width:20px;text-align:right;">'+item[1]+'</span></div>';}).join(''):'<div style="color:#999;font-size:13px;">데이터 없음</div>';
+}
+
+function toggleSampleForm(){
+  sampleFormOpen=!sampleFormOpen;
+  document.getElementById('sample-form').style.display=sampleFormOpen?'block':'none';
+  if(sampleFormOpen)document.getElementById('s-lend').value=new Date().toISOString().slice(0,10);
+}
+
+function saveSample(){
+  var name=document.getElementById('s-name').value.trim();
+  var cust=document.getElementById('s-cust').value.trim();
+  var ret=document.getElementById('s-ret').value;
+  if(!name||!cust||!ret){toast('필수 항목을 입력해 주세요');return;}
+  var rec={id:Date.now(),name:name,customer:cust,
+    code:document.getElementById('s-code').value,
+    phone:document.getElementById('s-phone').value,
+    lendDate:document.getElementById('s-lend').value,
+    returnDate:ret,staff:document.getElementById('s-staff').value,status:'대여중'};
+  samples.push(rec);
+  localStorage.setItem('yu_s',JSON.stringify(samples));
+  sendToSheet('saveSample',rec);
+  toggleSampleForm();
+  renderSamples();
+  toast('샘플 대여 등록 완료');
+  ['s-name','s-code','s-cust','s-phone','s-ret','s-staff'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+function returnSample(id){
+  for(var i=0;i<samples.length;i++){if(samples[i].id===id){samples[i].status='회수완료';break;}}
+  localStorage.setItem('yu_s',JSON.stringify(samples));
+  sendToSheet('returnSample',{id:id});
+  renderSamples();
+  toast('회수 완료 처리됨');
+}
+
+function renderSamples(){
+  var today=new Date().toISOString().slice(0,10);
+  var lend=samples.filter(function(s){return s.status==='대여중';}).length;
+  document.getElementById('sample-count').textContent='대여중 '+lend+'건';
+  var el=document.getElementById('sample-list');
+  if(!samples.length){el.innerHTML='<div style="color:#999;text-align:center;padding:30px;font-size:13px;">등록된 샘플이 없습니다</div>';return;}
+  var arr=samples.slice().reverse();
+  el.innerHTML=arr.map(function(s){
+    var overdue=s.status==='대여중'&&s.returnDate<today;
+    var sc=overdue?'br':s.status==='회수완료'?'bg':'ba';
+    return '<div class="card" style="cursor:default;"><div class="card-row"><div><div class="card-title">'+s.name+' <span style="font-size:11px;color:#999;">'+(s.code||'')+'</span></div><div class="card-sub">'+s.customer+' · 반납 '+s.returnDate+'</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;"><span class="badge '+sc+'">'+(overdue?'반납지연':s.status)+'</span>'+(s.status==='대여중'?'<button type="button" class="btn-sm" onclick="returnSample('+s.id+')" style="font-size:11px;padding:5px 10px;background:#edf4ef;color:#4a7c59;border-color:#4a7c59;">회수완료</button>':'')+'</div></div></div>';
+  }).join('');
+}
+
+function exportCSV(){
+  if(!consults.length){toast('저장된 상담이 없습니다');return;}
+  var h=['상담일','시간','고객명','연락처','고객유형','공간','평형','예산','스타일','컬러','소재','구매가능성','다음액션','미구매사유','담당직원','메모','후속연락일','상태'];
+  var rows=[h.join(',')];
+  consults.forEach(function(c){
+    rows.push([c.date,c.time,c.name,c.phone,c.type,c.space,c.size,c.budget,c.style,c.color,c.material,c.prob,c.action,c.reason,c.staff,c.memo,c.followup,c.status].map(function(v){return'"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(','));
+  });
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8;'}));
+  a.download='유앤어스_상담_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  toast(consults.length+'건 내보내기 완료');
+}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.opacity='1';
+  setTimeout(function(){t.style.opacity='0';},2500);
+}
+
+function openCalculator(){
+  var url = 'calculator.html';
+  var win = window.open(url, 'calculator', 'width=420,height=800,scrollbars=yes');
+  if(!win){
+    toast('팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 시도해 주세요.');
+  }
+}
+
+function receiveFromCalculator(data){
+  // 새 제품 슬롯 추가
+  prodCount++;
+  var d = document.createElement('div');
+  d.className = 'prod-item';
+  d.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid #eee;';
+  d.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    + '<span style="font-size:13px;font-weight:600;color:#666;">제품 '+prodCount+' <span style="font-size:11px;color:#b8975a;">✦ 계산기에서 담김</span></span>'
+    + '<button type="button" class="btn-sm" style="color:#c0392b;font-size:12px;" onclick="this.closest('.prod-item').remove()">삭제</button>'
+    + '</div>'
+    + '<div class="row2">'
+    + '<div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" value="'+( data.brand||'')+'" placeholder="YOUANDUS"></div>'
+    + '<div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" value="'+(data.name||'')+'" placeholder="제품명"></div>'
+    + '</div>'
+    + '<div class="row2">'
+    + '<div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" value="" placeholder="컬러"></div>'
+    + '<div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" value="'+(data.size||'')+'" placeholder="2000×3000"></div>'
+    + '</div>'
+    + '<div class="row2">'
+    + '<div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="'+(data.qty||1)+'"></div>'
+    + '<div class="field"><div class="lbl">견적금액 (VAT별도)</div><input type="text" class="inp prod-price" value="'+(data.price||'')+'" placeholder="0"></div>'
+    + '</div>';
+  document.getElementById('prod-list').appendChild(d);
+
+  // 상담등록 탭으로 이동 (이미 있으면 스크롤)
+  showTab('form');
+  toast('계산기 견적이 담겼습니다 ✦');
+}
+
+// 초기화
+initChips();
+renderDash();
+document.getElementById('f-followup').value=new Date(Date.now()+172800000).toISOString().slice(0,10);
+</script>
+</body>
+</html>
