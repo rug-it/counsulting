@@ -569,30 +569,53 @@ function openCalculator(){
 }
 
 function receiveFromCalculator(data){
-  // 새 제품 슬롯 추가
   prodCount++;
   var d = document.createElement('div');
   d.className = 'prod-item';
   d.style.cssText = 'margin-top:12px;padding-top:12px;border-top:1px solid #eee;';
-  d.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    + '<span style="font-size:13px;font-weight:600;color:#666;">제품 '+prodCount+' <span style="font-size:11px;color:#b8975a;">✦ 계산기에서 담김</span></span>'
-    + '<button type="button" class="btn-sm" style="color:#c0392b;font-size:12px;" onclick="this.closest('.prod-item').remove()">삭제</button>'
-    + '</div>'
-    + '<div class="row2">'
-    + '<div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" value="'+( data.brand||'')+'" placeholder="YOUANDUS"></div>'
-    + '<div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" value="'+(data.name||'')+'" placeholder="제품명"></div>'
-    + '</div>'
-    + '<div class="row2">'
-    + '<div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" value="" placeholder="컬러"></div>'
-    + '<div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" value="'+(data.size||'')+'" placeholder="2000×3000"></div>'
-    + '</div>'
-    + '<div class="row2">'
-    + '<div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="'+(data.qty||1)+'"></div>'
-    + '<div class="field"><div class="lbl">견적금액 (VAT별도)</div><input type="text" class="inp prod-price" value="'+(data.price||'')+'" placeholder="0"></div>'
-    + '</div>';
-  document.getElementById('prod-list').appendChild(d);
 
-  // 상담등록 탭으로 이동 (이미 있으면 스크롤)
+  var brandVal = data.brand || '';
+  var nameVal = data.name || '';
+  var sizeVal = data.size || '';
+  var qtyVal = data.qty || 1;
+  var priceVal = data.price || '';
+
+  var header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+  header.innerHTML = '<span style="font-size:13px;font-weight:600;color:#666;">제품 '+prodCount+' <span style="font-size:11px;color:#b8975a;">✦ 계산기에서 담김</span></span>';
+  var delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'btn-sm';
+  delBtn.style.cssText = 'color:#c0392b;font-size:12px;';
+  delBtn.textContent = '삭제';
+  delBtn.onclick = function(){ d.parentNode.removeChild(d); };
+  header.appendChild(delBtn);
+  d.appendChild(header);
+
+  var row1 = document.createElement('div');
+  row1.className = 'row2';
+  row1.innerHTML = '<div class="field"><div class="lbl">브랜드</div><input type="text" class="inp prod-brand" placeholder="YOUANDUS"></div>'
+    + '<div class="field"><div class="lbl">제품명</div><input type="text" class="inp prod-pname" placeholder="제품명"></div>';
+  d.appendChild(row1);
+  row1.querySelectorAll('input')[0].value = brandVal;
+  row1.querySelectorAll('input')[1].value = nameVal;
+
+  var row2 = document.createElement('div');
+  row2.className = 'row2';
+  row2.innerHTML = '<div class="field"><div class="lbl">컬러</div><input type="text" class="inp prod-color" placeholder="컬러"></div>'
+    + '<div class="field"><div class="lbl">사이즈</div><input type="text" class="inp prod-size" placeholder="2000×3000"></div>';
+  d.appendChild(row2);
+  row2.querySelectorAll('input')[1].value = sizeVal;
+
+  var row3 = document.createElement('div');
+  row3.className = 'row2';
+  row3.innerHTML = '<div class="field"><div class="lbl">수량</div><input type="number" class="inp prod-qty" value="1"></div>'
+    + '<div class="field"><div class="lbl">견적금액 (VAT별도)</div><input type="text" class="inp prod-price" placeholder="0"></div>';
+  d.appendChild(row3);
+  row3.querySelectorAll('input')[0].value = qtyVal;
+  row3.querySelectorAll('input')[1].value = priceVal;
+
+  document.getElementById('prod-list').appendChild(d);
   showTab('form');
   toast('계산기 견적이 담겼습니다 ✦');
 }
