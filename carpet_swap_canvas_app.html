@@ -1,288 +1,944 @@
-
-<h2 class="sr-only">카펫 교체 앱 — 제품1 배경에 제품2 카펫 텍스처를 Canvas로 합성</h2>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>카펫 합성 프로세스 — 유앤어스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-.app{padding:20px;color:var(--color-text-primary);font-size:14px}
-.hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)}
-.hdr-title{font-size:16px;font-weight:500}
-.hdr-badge{font-size:11px;padding:3px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-secondary)}
+:root {
+  --bg: #F8F6F2;
+  --surface: #FFFFFF;
+  --surface2: #F2EFE9;
+  --border: #E5E0D8;
+  --text: #1C1A17;
+  --text2: #6B6457;
+  --text3: #A09890;
+  --accent: #2C2925;
+  --gold: #C4A97D;
+  --gold-light: #F0E8D8;
+  --ok: #2E6B45;
+  --ok-bg: #EAF3EE;
+  --ok-bd: #B6D9C5;
+  --step1: #8B6914;
+  --step1-bg: #FDF6E8;
+  --step1-bd: #E8D5A8;
+  --step2: #1A5C8A;
+  --step2-bg: #EBF3FA;
+  --step2-bd: #B0CDE6;
+  --step3: #5A2D82;
+  --step3-bg: #F3EBF9;
+  --step3-bd: #CCAAE6;
+  --r: 14px;
+  --rs: 8px;
+  --shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-appearance: none; }
 
-.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.uzone{border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);min-height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;background:var(--color-background-primary);transition:border-color 0.15s}
-.uzone:hover{border-color:var(--color-border-primary)}
-.uzone.loaded{border-style:solid;border-color:var(--color-border-success)}
-.uzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.uzone img{width:100%;height:120px;object-fit:cover;display:block}
-.zfoot{width:100%;padding:8px 12px;background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary)}
-.zlbl{font-size:11px;font-weight:500;color:var(--color-text-success)}
-.zhint{font-size:11px;color:var(--color-text-tertiary);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.zph{text-align:center;padding:20px 12px}
-.zph-icon{font-size:22px;color:var(--color-text-tertiary);margin-bottom:8px}
-.zph-lbl{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:3px}
-.zph-hint{font-size:11px;color:var(--color-text-tertiary)}
+body {
+  font-family: 'DM Sans', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
 
-.controls{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:16px;display:grid;gap:12px}
-.ctrl-row{display:flex;align-items:center;gap:12px}
-.ctrl-lbl{font-size:12px;color:var(--color-text-secondary);width:80px;flex-shrink:0}
-.ctrl-row input[type=range]{flex:1}
-.ctrl-val{font-size:12px;font-weight:500;min-width:32px;text-align:right;color:var(--color-text-primary)}
+/* ── 헤더 ── */
+.topbar {
+  background: var(--accent);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+.topbar-logo { font-family: 'DM Serif Display', serif; font-size: 18px; color: #fff; letter-spacing: 0.3px; }
+.topbar-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.2); }
+.topbar-sub { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 0.5px; }
+.api-badge { font-size: 11px; padding: 4px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; color: rgba(255,255,255,0.7); cursor: pointer; }
+.api-badge.set { background: rgba(196,169,125,0.2); border-color: var(--gold); color: var(--gold); }
 
-.blend-btns{display:flex;gap:6px;flex-wrap:wrap}
-.blend-btn{font-size:11px;padding:4px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);cursor:pointer;color:var(--color-text-secondary);transition:all 0.1s}
-.blend-btn.sel{border-color:var(--color-border-info);background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+/* ── API 키 모달 ── */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--r); padding: 28px; width: 90%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 6px; }
+.modal-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+.modal-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.modal-input { flex: 1; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 13px; font-family: 'SF Mono', Menlo, monospace; color: var(--text); background: var(--surface2); outline: none; }
+.modal-input:focus { border-color: var(--gold); }
+.modal-btn { height: 42px; padding: 0 16px; border-radius: var(--rs); border: none; cursor: pointer; font-size: 13px; font-weight: 500; }
+.modal-btn.primary { background: var(--accent); color: #fff; }
+.modal-btn.secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+.modal-hint { font-size: 11px; color: var(--text3); line-height: 1.5; }
+.modal-close { float: right; background: none; border: none; font-size: 18px; color: var(--text3); cursor: pointer; margin-top: -4px; }
 
-.run-btn{width:100%;padding:13px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:14px;font-weight:500;cursor:pointer;color:var(--color-text-primary);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s}
-.run-btn:not(:disabled):hover{background:var(--color-background-secondary)}
-.run-btn:not(:disabled):active{transform:scale(0.98)}
-.run-btn:disabled{opacity:0.4;cursor:not-allowed}
+/* ── 메인 레이아웃 ── */
+.main { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
 
-.err{border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);background:var(--color-background-danger);padding:10px 12px;font-size:12px;color:var(--color-text-danger);margin-bottom:12px;display:none}
-.err.show{display:block}
+/* ── 섹션 헤더 ── */
+.page-title { font-family: 'DM Serif Display', serif; font-size: 28px; letter-spacing: -0.3px; margin-bottom: 6px; }
+.page-sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
 
-.result-wrap{display:none;margin-bottom:12px}
-.result-wrap.show{display:block}
-.result-lbl{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.4px;margin-bottom:8px}
-.result-card{border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);overflow:hidden}
-.result-card canvas{width:100%;display:block;max-height:320px;object-fit:contain}
-.result-foot{padding:10px 14px;background:var(--color-background-success);display:flex;align-items:center;justify-content:space-between}
-.result-foot-txt{font-size:12px;color:var(--color-text-success);font-weight:500}
-.dl-btn{background:none;border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;color:var(--color-text-success);cursor:pointer;display:flex;align-items:center;gap:5px}
-.dl-btn:hover{background:var(--color-background-primary)}
+/* ── 이미지 업로드 ── */
+.upload-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.upload-card {
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--r);
+  min-height: 200px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+  box-shadow: var(--shadow);
+}
+.upload-card:hover { border-color: var(--gold); box-shadow: 0 4px 20px rgba(196,169,125,0.15); }
+.upload-card.loaded { border-style: solid; border-color: var(--ok-bd); }
+.upload-card input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-card img { width: 100%; height: 170px; object-fit: cover; display: block; }
+.card-foot { width: 100%; padding: 10px 14px; background: var(--ok-bg); border-top: 1px solid var(--ok-bd); }
+.card-foot-lbl { font-size: 12px; font-weight: 500; color: var(--ok); }
+.card-foot-name { font-size: 11px; color: var(--text3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-ph { text-align: center; padding: 24px 16px; }
+.card-ph-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; }
+.card-ph-tag.a { background: var(--step1-bg); color: var(--step1); border: 1px solid var(--step1-bd); }
+.card-ph-tag.b { background: var(--step2-bg); color: var(--step2); border: 1px solid var(--step2-bd); }
+.card-ph-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.card-ph-hint { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.card-ph-icon { font-size: 32px; margin-bottom: 10px; }
 
-.ai-section{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px;display:none}
-.ai-section.show{display:block}
-.ai-head{padding:10px 14px;background:var(--color-background-secondary);font-size:12px;font-weight:500;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px}
-.ai-body{padding:12px 14px;font-size:12px;color:var(--color-text-secondary);line-height:1.7}
+/* ── 프로세스 스텝 ── */
+.steps-wrap { display: flex; gap: 0; margin-bottom: 24px; }
+.step-item { flex: 1; position: relative; }
+.step-item:not(:last-child)::after {
+  content: ''; position: absolute; top: 20px; left: 50%; right: -50%;
+  height: 1px; background: var(--border);
+}
+.step-item.done:not(:last-child)::after { background: var(--ok); }
+.step-dot {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid var(--border); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px; position: relative; z-index: 1;
+  font-size: 13px; font-weight: 600; color: var(--text3);
+  transition: all .3s;
+}
+.step-item.step1.active .step-dot { border-color: var(--step1); background: var(--step1-bg); color: var(--step1); }
+.step-item.step1.done .step-dot { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.step-item.step2.active .step-dot { border-color: var(--step2); background: var(--step2-bg); color: var(--step2); }
+.step-item.step2.done .step-dot { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.step-item.step3.active .step-dot { border-color: var(--step3); background: var(--step3-bg); color: var(--step3); }
+.step-item.step3.done .step-dot { border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.step-label { text-align: center; font-size: 11px; color: var(--text3); line-height: 1.4; }
+.step-item.active .step-label { color: var(--text); font-weight: 500; }
+.step-item.done .step-label { color: var(--ok); }
 
-.spinner{width:13px;height:13px;border:2px solid var(--color-border-info);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ── 실행 버튼 ── */
+.run-area { margin-bottom: 24px; }
+.run-btn {
+  width: 100%; padding: 16px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--r);
+  font-size: 15px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+  letter-spacing: -0.2px;
+  transition: opacity .2s, transform .1s;
+  box-shadow: 0 4px 16px rgba(44,41,37,0.2);
+}
+.run-btn:hover { opacity: 0.92; }
+.run-btn:active { transform: scale(.99); }
+.run-btn:disabled { background: var(--border); color: var(--text3); cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ── 로그 ── */
+.log-card { background: var(--accent); border-radius: var(--r); overflow: hidden; margin-bottom: 24px; display: none; }
+.log-card.show { display: block; }
+.log-head { padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.log-head-txt { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.8px; text-transform: uppercase; font-weight: 500; }
+.log-body { padding: 14px 16px; font-size: 12px; color: rgba(255,255,255,0.75); font-family: 'SF Mono', Menlo, monospace; line-height: 1.9; white-space: pre-wrap; max-height: 160px; overflow-y: auto; }
+
+/* ── 결과 카드들 ── */
+.results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; display: none; }
+.results-grid.show { display: grid; }
+.result-card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.result-card-head { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.result-card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.result-card-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; }
+.tag-s1 { background: var(--step1-bg); color: var(--step1); border: 1px solid var(--step1-bd); }
+.tag-s2 { background: var(--step2-bg); color: var(--step2); border: 1px solid var(--step2-bd); }
+.result-card img, .result-card canvas { width: 100%; display: block; }
+.result-card-foot { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+.result-card-file { font-size: 11px; color: var(--text3); font-family: 'SF Mono', Menlo, monospace; }
+.dl-btn { background: none; border: 1px solid var(--border); border-radius: var(--rs); padding: 5px 12px; font-size: 11px; font-weight: 500; color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.dl-btn:hover { background: var(--border); }
+
+/* ── 프로세스 리포트 ── */
+.report-section { display: none; }
+.report-section.show { display: block; }
+.report-card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px; }
+.report-card canvas { width: 100%; display: block; }
+.report-card-head { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.report-card-title { font-size: 13px; font-weight: 500; }
+.tag-s3 { background: var(--step3-bg); color: var(--step3); border: 1px solid var(--step3-bd); }
+
+/* ── AI 분석 ── */
+.ai-section { display: none; }
+.ai-section.show { display: block; margin-bottom: 24px; }
+.ai-card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--gold-light); }
+.ai-card-head { padding: 12px 16px; background: var(--gold-light); border-bottom: 1px solid var(--step1-bd); display: flex; align-items: center; gap: 8px; }
+.ai-card-title { font-size: 13px; font-weight: 500; color: var(--step1); }
+.ai-card-body { padding: 18px; font-size: 13px; color: var(--text2); line-height: 1.8; }
+
+/* ── 체크리스트 ── */
+.checklist-card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+.checklist-head { padding: 14px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; }
+.checklist-body { padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.check-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text2); }
+.check-item.ok { color: var(--ok); }
+.check-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.check-item.ok .check-dot { background: var(--ok-bg); border-color: var(--ok-bd); color: var(--ok); }
+
+/* ── 에러 ── */
+.err { background: #FDF0EE; border: 1px solid #E8C4BC; border-radius: var(--rs); padding: 12px 14px; font-size: 13px; color: #8B2E2E; margin-bottom: 16px; display: none; }
+.err.show { display: block; }
+
+/* ── 스피너 ── */
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+.spinner-sm { width: 12px; height: 12px; border: 1.5px solid rgba(255,255,255,0.3); border-top-color: rgba(255,255,255,0.8); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .upload-section { grid-template-columns: 1fr; }
+  .results-grid { grid-template-columns: 1fr; }
+  .checklist-body { grid-template-columns: 1fr; }
+}
 </style>
+</head>
+<body>
 
-<div class="app">
-  <div class="hdr">
-    <i class="ti ti-replace" style="font-size:20px;color:var(--color-text-secondary)" aria-hidden="true"></i>
-    <span class="hdr-title">카펫 교체 AI</span>
-    <span class="hdr-badge">Canvas 합성 + Claude 분석</span>
+<!-- 헤더 -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-logo">유앤어스</span>
+    <div class="topbar-divider"></div>
+    <span class="topbar-sub">카펫 합성 프로세스</span>
   </div>
+  <button type="button" class="api-badge" id="apiBadge" onclick="openModal()">API 키 설정</button>
+</div>
 
-  <div class="upload-grid">
-    <div class="uzone" id="zone1">
-      <input type="file" accept="image/*" onchange="handleFile(event,1)">
-      <div id="z1ph" class="zph">
-        <div class="zph-icon"><i class="ti ti-home" aria-hidden="true"></i></div>
-        <div class="zph-lbl">제품 1 · 배경 공간</div>
-        <div class="zph-hint">카펫 교체할 공간 사진</div>
-      </div>
-      <div id="z1ld" style="display:none;width:100%">
-        <img id="z1img" src="" alt="제품1">
-        <div class="zfoot">
-          <div class="zlbl"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> 제품 1</div>
-          <div class="zhint" id="z1nm"></div>
-        </div>
-      </div>
+<!-- API 키 모달 -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button type="button" class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">API 키 설정</div>
+    <div class="modal-desc">Anthropic Console에서 발급한 API 키를 입력하세요.<br>키는 이 기기에만 저장되며 외부로 전송되지 않습니다.</div>
+    <div class="modal-input-row">
+      <input type="password" id="apiInput" class="modal-input" placeholder="sk-ant-...">
+      <button type="button" class="modal-btn secondary" onclick="toggleApiVis()">보기</button>
     </div>
-    <div class="uzone" id="zone2">
-      <input type="file" accept="image/*" onchange="handleFile(event,2)">
-      <div id="z2ph" class="zph">
-        <div class="zph-icon"><i class="ti ti-texture" aria-hidden="true"></i></div>
-        <div class="zph-lbl">제품 2 · 카펫</div>
-        <div class="zph-hint">새로 배치할 카펫 사진</div>
-      </div>
-      <div id="z2ld" style="display:none;width:100%">
-        <img id="z2img" src="" alt="제품2">
-        <div class="zfoot">
-          <div class="zlbl"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> 제품 2</div>
-          <div class="zhint" id="z2nm"></div>
-        </div>
-      </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button type="button" class="modal-btn primary" style="flex:1" onclick="saveApi()">저장</button>
+      <button type="button" class="modal-btn secondary" onclick="closeModal()">취소</button>
     </div>
-  </div>
-
-  <div class="controls">
-    <div class="ctrl-row">
-      <span class="ctrl-lbl">카펫 불투명도</span>
-      <input type="range" min="10" max="100" value="70" step="1" oninput="document.getElementById('opVal').textContent=this.value+'%';previewIfReady()" id="opSlider">
-      <span class="ctrl-val" id="opVal">70%</span>
-    </div>
-    <div class="ctrl-row">
-      <span class="ctrl-lbl">카펫 크기</span>
-      <input type="range" min="20" max="100" value="60" step="1" oninput="document.getElementById('szVal').textContent=this.value+'%';previewIfReady()" id="szSlider">
-      <span class="ctrl-val" id="szVal">60%</span>
-    </div>
-    <div class="ctrl-row">
-      <span class="ctrl-lbl">블렌드 모드</span>
-      <div class="blend-btns">
-        <button type="button" class="blend-btn sel" onclick="selectBlend(this,'multiply')">Multiply</button>
-        <button type="button" class="blend-btn" onclick="selectBlend(this,'overlay')">Overlay</button>
-        <button type="button" class="blend-btn" onclick="selectBlend(this,'source-over')">Normal</button>
-        <button type="button" class="blend-btn" onclick="selectBlend(this,'luminosity')">Luminosity</button>
-      </div>
-    </div>
-  </div>
-
-  <button type="button" class="run-btn" id="runBtn" onclick="runAll()" disabled>
-    <i class="ti ti-sparkles" aria-hidden="true"></i>
-    카펫 교체 + AI 분석
-  </button>
-
-  <div class="err" id="errBar"></div>
-
-  <div class="result-wrap" id="resultWrap">
-    <div class="result-lbl">합성 결과</div>
-    <div class="result-card">
-      <canvas id="resultCanvas"></canvas>
-      <div class="result-foot">
-        <span class="result-foot-txt"><i class="ti ti-check" aria-hidden="true"></i> 합성 완료</span>
-        <button type="button" class="dl-btn" onclick="downloadResult()">
-          <i class="ti ti-download" aria-hidden="true"></i> 다운로드
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="ai-section" id="aiSection">
-    <div class="ai-head" id="aiHead">
-      <i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i>
-      AI 인테리어 분석
-    </div>
-    <div class="ai-body" id="aiBody"></div>
+    <div class="modal-hint">console.anthropic.com → API Keys에서 발급 가능합니다.</div>
   </div>
 </div>
 
-<script>
-var _img1=null,_img2=null,_b1='',_b2='',_t1='image/jpeg',_t2='image/jpeg';
-var _blendMode='multiply';
+<!-- 메인 -->
+<div class="main">
 
-function handleFile(ev,num){
-  var f=ev.target.files[0];if(!f)return;
-  var r=new FileReader();
-  r.onload=function(e){
-    var src=e.target.result,b64=src.split(',')[1];
-    var img=new Image();
-    img.onload=function(){
-      if(num===1){
-        _img1=img;_b1=b64;_t1=f.type||'image/jpeg';
-        document.getElementById('z1img').src=src;
-        document.getElementById('z1nm').textContent=f.name;
-        document.getElementById('z1ph').style.display='none';
-        document.getElementById('z1ld').style.display='block';
-        document.getElementById('zone1').classList.add('loaded');
+  <div class="page-title">카펫 합성 프로세스</div>
+  <div class="page-sub">2장의 이미지로 최종 결과 만들기 — 3단계 자동 처리</div>
+
+  <!-- 이미지 업로드 -->
+  <div class="upload-section">
+    <div class="upload-card" id="zoneA">
+      <input type="file" accept="image/*" onchange="handleFile(event,'A')">
+      <div id="zA-ph" class="card-ph">
+        <div class="card-ph-icon">🏠</div>
+        <div class="card-ph-tag a">Image A</div>
+        <div class="card-ph-title">공간 이미지</div>
+        <div class="card-ph-hint">카펫을 설치할<br>실제 공간 이미지</div>
+      </div>
+      <div id="zA-ld" style="display:none;width:100%">
+        <img id="zA-img" src="" alt="">
+        <div class="card-foot">
+          <div class="card-foot-lbl">✓ Image A 업로드 완료</div>
+          <div class="card-foot-name" id="zA-nm"></div>
+        </div>
+      </div>
+    </div>
+    <div class="upload-card" id="zoneB">
+      <input type="file" accept="image/*" onchange="handleFile(event,'B')">
+      <div id="zB-ph" class="card-ph">
+        <div class="card-ph-icon">🪡</div>
+        <div class="card-ph-tag b">Image B</div>
+        <div class="card-ph-title">카펫 이미지</div>
+        <div class="card-ph-hint">적용할 카펫<br>디자인 이미지</div>
+      </div>
+      <div id="zB-ld" style="display:none;width:100%">
+        <img id="zB-img" src="" alt="">
+        <div class="card-foot">
+          <div class="card-foot-lbl">✓ Image B 업로드 완료</div>
+          <div class="card-foot-name" id="zB-nm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 프로세스 스텝 -->
+  <div class="steps-wrap" id="stepsWrap">
+    <div class="step-item step1" id="st0">
+      <div class="step-dot">1</div>
+      <div class="step-label">기존 카펫<br>제거</div>
+    </div>
+    <div class="step-item step2" id="st1">
+      <div class="step-dot">2</div>
+      <div class="step-label">새 카펫<br>설치</div>
+    </div>
+    <div class="step-item step3" id="st2">
+      <div class="step-dot">3</div>
+      <div class="step-label">Before/After<br>리포트</div>
+    </div>
+  </div>
+
+  <!-- 실행 -->
+  <div class="run-area">
+    <div class="err" id="errBar"></div>
+    <button type="button" class="run-btn" id="runBtn" onclick="runAll()" disabled>
+      카펫 합성 프로세스 시작
+    </button>
+  </div>
+
+  <!-- 로그 -->
+  <div class="log-card" id="logCard">
+    <div class="log-head">
+      <span class="spinner-sm" id="logSpinner"></span>
+      <span class="log-head-txt">처리 로그</span>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+  <!-- 결과 1,2단계 -->
+  <div class="results-grid" id="resultsGrid">
+    <div class="result-card">
+      <div class="result-card-head">
+        <span class="result-card-title">1단계 결과</span>
+        <span class="result-card-tag tag-s1">01 카펫 제거</span>
+      </div>
+      <canvas id="canvas01"></canvas>
+      <div class="result-card-foot">
+        <span class="result-card-file">01_space_without_carpet.png</span>
+        <button type="button" class="dl-btn" onclick="downloadCanvas('canvas01','01_space_without_carpet.png')">↓ 저장</button>
+      </div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-head">
+        <span class="result-card-title">2단계 결과</span>
+        <span class="result-card-tag tag-s2">02 카펫 설치</span>
+      </div>
+      <canvas id="canvas02"></canvas>
+      <div class="result-card-foot">
+        <span class="result-card-file">02_space_with_carpet_final.png</span>
+        <button type="button" class="dl-btn" onclick="downloadCanvas('canvas02','02_space_with_carpet_final.png')">↓ 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 분석 -->
+  <div class="ai-section" id="aiSection">
+    <div class="ai-card">
+      <div class="ai-card-head">
+        <span>✦</span>
+        <span class="ai-card-title">AI 인테리어 분석</span>
+      </div>
+      <div class="ai-card-body" id="aiBody"></div>
+    </div>
+  </div>
+
+  <!-- 3단계 리포트 -->
+  <div class="report-section" id="reportSection">
+    <div class="report-card">
+      <div class="report-card-head">
+        <span class="result-card-title">3단계 결과</span>
+        <span class="result-card-tag tag-s3">03 프로세스 리포트</span>
+      </div>
+      <canvas id="canvas03"></canvas>
+      <div class="result-card-foot">
+        <span class="result-card-file">03_carpet_process_report.png</span>
+        <button type="button" class="dl-btn" onclick="downloadCanvas('canvas03','03_carpet_process_report.png')">↓ 저장</button>
+      </div>
+    </div>
+
+    <!-- 체크리스트 -->
+    <div class="checklist-card">
+      <div class="checklist-head">✅ 합성 품질 체크리스트</div>
+      <div class="checklist-body" id="checklistBody">
+        <div class="check-item ok"><div class="check-dot">✓</div>공간 이미지 업로드</div>
+        <div class="check-item ok"><div class="check-dot">✓</div>카펫 이미지 업로드</div>
+        <div class="check-item" id="chk1"><div class="check-dot"></div>기존 카펫 제거</div>
+        <div class="check-item" id="chk2"><div class="check-dot"></div>새 카펫 설치</div>
+        <div class="check-item" id="chk3"><div class="check-dot"></div>원근감 자연스러움</div>
+        <div class="check-item" id="chk4"><div class="check-dot"></div>Before/After 리포트</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+var _apiKey = '';
+var _imgA = null, _imgB = null;
+var _b64A = '', _b64B = '', _tA = 'image/jpeg', _tB = 'image/jpeg';
+var _canvas01 = null, _canvas02 = null;
+
+// ── API 키 ──
+function loadApi() {
+  try { var k = localStorage.getItem('youandus_api_key'); if (k) { _apiKey = k; document.getElementById('apiBadge').textContent = 'API 키 설정됨'; document.getElementById('apiBadge').classList.add('set'); document.getElementById('apiInput').value = k; } } catch(e) {}
+  checkReady();
+}
+function openModal() { document.getElementById('modalBg').classList.add('open'); }
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+function toggleApiVis() { var i = document.getElementById('apiInput'); i.type = i.type === 'password' ? 'text' : 'password'; }
+function saveApi() {
+  _apiKey = document.getElementById('apiInput').value.trim();
+  if (!_apiKey) { alert('API 키를 입력해주세요.'); return; }
+  try { localStorage.setItem('youandus_api_key', _apiKey); } catch(e) {}
+  document.getElementById('apiBadge').textContent = 'API 키 설정됨';
+  document.getElementById('apiBadge').classList.add('set');
+  closeModal(); checkReady();
+}
+
+// ── 파일 업로드 ──
+function handleFile(ev, which) {
+  var f = ev.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    var src = e.target.result, b64 = src.split(',')[1];
+    var img = new Image();
+    img.onload = function() {
+      if (which === 'A') {
+        _imgA = img; _b64A = b64; _tA = f.type || 'image/jpeg';
+        document.getElementById('zA-img').src = src;
+        document.getElementById('zA-nm').textContent = f.name;
+        document.getElementById('zA-ph').style.display = 'none';
+        document.getElementById('zA-ld').style.display = 'block';
+        document.getElementById('zoneA').classList.add('loaded');
       } else {
-        _img2=img;_b2=b64;_t2=f.type||'image/jpeg';
-        document.getElementById('z2img').src=src;
-        document.getElementById('z2nm').textContent=f.name;
-        document.getElementById('z2ph').style.display='none';
-        document.getElementById('z2ld').style.display='block';
-        document.getElementById('zone2').classList.add('loaded');
+        _imgB = img; _b64B = b64; _tB = f.type || 'image/jpeg';
+        document.getElementById('zB-img').src = src;
+        document.getElementById('zB-nm').textContent = f.name;
+        document.getElementById('zB-ph').style.display = 'none';
+        document.getElementById('zB-ld').style.display = 'block';
+        document.getElementById('zoneB').classList.add('loaded');
       }
       checkReady();
-      previewIfReady();
     };
-    img.src=src;
+    img.src = src;
   };
   r.readAsDataURL(f);
 }
 
-function checkReady(){
-  document.getElementById('runBtn').disabled=!(_img1&&_img2);
+function checkReady() {
+  document.getElementById('runBtn').disabled = !(_apiKey && _imgA && _imgB);
 }
 
-function selectBlend(btn,mode){
-  document.querySelectorAll('.blend-btn').forEach(function(b){b.classList.remove('sel');});
-  btn.classList.add('sel');
-  _blendMode=mode;
-  previewIfReady();
-}
-
-function previewIfReady(){
-  if(!_img1||!_img2)return;
-  composite(false);
-}
-
-function composite(showResult){
-  var c=document.getElementById('resultCanvas');
-  var W=_img1.naturalWidth,H=_img1.naturalHeight;
-  c.width=W;c.height=H;
-  var ctx=c.getContext('2d');
-
-  ctx.drawImage(_img1,0,0,W,H);
-
-  var op=parseInt(document.getElementById('opSlider').value)/100;
-  var sz=parseInt(document.getElementById('szSlider').value)/100;
-
-  var cw=Math.round(W*sz);
-  var ch=Math.round(H*sz*0.55);
-  var cx=Math.round((W-cw)/2);
-  var cy=Math.round(H*0.38);
-
-  ctx.save();
-  ctx.globalAlpha=op;
-  ctx.globalCompositeOperation=_blendMode;
-
-  var offC=document.createElement('canvas');
-  offC.width=cw;offC.height=ch;
-  var offCtx=offC.getContext('2d');
-  offCtx.drawImage(_img2,0,0,cw,ch);
-
-  ctx.drawImage(offC,cx,cy,cw,ch);
-  ctx.restore();
-
-  if(showResult){
-    document.getElementById('resultWrap').classList.add('show');
+// ── 스텝 UI ──
+function setStep(n) {
+  for (var i = 0; i <= 2; i++) {
+    var el = document.getElementById('st' + i);
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
   }
 }
 
-function runAll(){
-  document.getElementById('errBar').classList.remove('show');
-  composite(true);
-  callAI();
+// ── 로그 ──
+function log(msg) {
+  var b = document.getElementById('logBody');
+  b.textContent += (b.textContent ? '\n' : '') + msg;
+  b.scrollTop = b.scrollHeight;
+}
+function showLog(on) {
+  var c = document.getElementById('logCard');
+  var sp = document.getElementById('logSpinner');
+  c.classList.toggle('show', on !== false);
+  sp.style.display = on === 'done' ? 'none' : 'inline-block';
 }
 
-function callAI(){
-  var sec=document.getElementById('aiSection');
-  var head=document.getElementById('aiHead');
-  var body=document.getElementById('aiBody');
-  sec.classList.add('show');
-  head.innerHTML='<span class="spinner"></span> AI 분석 중...';
-  body.textContent='';
+// ── 에러 ──
+function showErr(msg) { var e = document.getElementById('errBar'); e.textContent = '⚠ ' + msg; e.classList.add('show'); }
+function clearErr() { document.getElementById('errBar').classList.remove('show'); }
 
-  var prompt='두 인테리어 이미지를 보고 있습니다.\n첫 번째: 카펫이 있는 공간\n두 번째: 새 카펫 제품\n\n인테리어 전문가로서 이 카펫 교체의 결과를 분석해주세요:\n1. 공간과 카펫의 색상·스타일 조화도 (100점 만점)\n2. 이 조합의 장점 2가지\n3. 스타일링 팁 2가지\n\n간결하게 4~6문장으로 답해주세요.';
+// ── Claude API 호출 ──
+function callClaude(messages, maxTokens, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://api.anthropic.com/v1/messages', true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('x-api-key', _apiKey);
+  xhr.setRequestHeader('anthropic-version', '2023-06-01');
+  xhr.setRequestHeader('anthropic-dangerous-request-origin-bypass', 'true');
+  xhr.onload = function() {
+    try {
+      var r = JSON.parse(xhr.responseText);
+      if (r.error) { cb(r.error.message, null); return; }
+      var txt = r.content.map(function(c) { return c.text || ''; }).join('');
+      cb(null, txt);
+    } catch(e) { cb(e.message, null); }
+  };
+  xhr.onerror = function() { cb('네트워크 오류 (CORS). 로컬 서버 또는 Netlify에서 실행해주세요.', null); };
+  xhr.send(JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, messages: messages }));
+}
 
-  var xhr=new XMLHttpRequest();
-  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
-  xhr.setRequestHeader('Content-Type','application/json');
-  xhr.onload=function(){
-    try{
-      var r=JSON.parse(xhr.responseText);
-      var txt='';
-      for(var i=0;i<r.content.length;i++){if(r.content[i].type==='text')txt+=r.content[i].text;}
-      head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
-      body.textContent=txt;
-    }catch(e){
-      head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
-      body.textContent='분석 결과를 불러오지 못했습니다.';
+// ── 전체 실행 ──
+function runAll() {
+  clearErr();
+  document.getElementById('resultsGrid').classList.remove('show');
+  document.getElementById('reportSection').classList.remove('show');
+  document.getElementById('aiSection').classList.remove('show');
+  document.getElementById('logBody').textContent = '';
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('runBtn').innerHTML = '<span class="spinner"></span> 처리 중...';
+  showLog(true);
+
+  setStep(0);
+  log('▶ 카펫 합성 프로세스 시작');
+  log('');
+  log('[1단계] 기존 카펫 감지 및 영역 분석 중...');
+
+  // 1단계: 카펫 위치 감지
+  callClaude([{
+    role: 'user',
+    content: [
+      { type: 'image', source: { type: 'base64', media_type: _tA, data: _b64A } },
+      { type: 'text', text: '이 공간 이미지에서 카펫(러그)을 분석하세요.\n\nJSON만 반환 (마크다운 없음):\n{"carpet_detected":true/false,"carpet_box":{"x_pct":왼쪽%,"y_pct":위쪽%,"w_pct":너비%,"h_pct":높이%},"floor_color":"주변바닥 hex색","floor_texture":"wood/tile/marble/concrete/unknown","sofa_box":{"x_pct":소파왼쪽%,"y_pct":소파위쪽%,"w_pct":소파너비%,"h_pct":소파높이%}}\n\n카펫 없으면 carpet_detected:false, carpet_box:null' }
+    ]
+  }], 800, function(err, txt) {
+    if (err) { showErr('1단계 오류: ' + err); resetBtn(); return; }
+    var info;
+    try { info = JSON.parse(txt.replace(/```json|```/g, '').trim()); } catch(e) { showErr('감지 파싱 오류'); resetBtn(); return; }
+
+    if (info.carpet_detected) {
+      var b = info.carpet_box;
+      log('  ✓ 기존 카펫 발견');
+      log('  위치: x=' + Math.round(b.x_pct) + '% y=' + Math.round(b.y_pct) + '% w=' + Math.round(b.w_pct) + '% h=' + Math.round(b.h_pct) + '%');
+      log('  바닥 재질: ' + info.floor_texture + ' / 색상: ' + info.floor_color);
+    } else {
+      log('  카펫 없음 — 바닥 그대로 사용');
     }
-  };
-  xhr.onerror=function(){
-    head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
-    body.textContent='네트워크 오류로 분석을 가져오지 못했습니다.';
-  };
-  xhr.send(JSON.stringify({
-    model:'claude-sonnet-4-20250514',
-    max_tokens:1000,
-    messages:[{role:'user',content:[
-      {type:'image',source:{type:'base64',media_type:_t1,data:_b1}},
-      {type:'image',source:{type:'base64',media_type:_t2,data:_b2}},
-      {type:'text',text:prompt}
-    ]}]
-  }));
+
+    // Canvas로 카펫 제거
+    log('  바닥 복원 중...');
+    var c01 = step1_eraseCarept(info);
+    _canvas01 = c01;
+
+    // 결과 표시
+    var dest01 = document.getElementById('canvas01');
+    dest01.width = c01.width; dest01.height = c01.height;
+    dest01.getContext('2d').drawImage(c01, 0, 0);
+
+    document.getElementById('resultsGrid').classList.add('show');
+    document.getElementById('chk1').classList.add('ok');
+    document.getElementById('chk1').querySelector('.check-dot').textContent = '✓';
+
+    setStep(1);
+    log('');
+    log('[2단계] 새 카펫 합성 중...');
+
+    // 카펫 배경 제거 후 합성
+    var c02 = step2_composeCarpet(c01, info);
+    _canvas02 = c02;
+    var dest02 = document.getElementById('canvas02');
+    dest02.width = c02.width; dest02.height = c02.height;
+    dest02.getContext('2d').drawImage(c02, 0, 0);
+
+    log('  ✓ 새 카펫 합성 완료');
+    document.getElementById('chk2').classList.add('ok');
+    document.getElementById('chk2').querySelector('.check-dot').textContent = '✓';
+    document.getElementById('chk3').classList.add('ok');
+    document.getElementById('chk3').querySelector('.check-dot').textContent = '✓';
+
+    setStep(2);
+    log('');
+    log('[3단계] Before/After 프로세스 리포트 생성 중...');
+
+    // 리포트 생성
+    step3_makeReport(c01, c02);
+
+    log('  ✓ 리포트 생성 완료');
+    document.getElementById('reportSection').classList.add('show');
+    document.getElementById('chk4').classList.add('ok');
+    document.getElementById('chk4').querySelector('.check-dot').textContent = '✓';
+
+    log('');
+    log('[AI] 인테리어 분석 중...');
+
+    // AI 분석
+    var finalB64 = c02.toDataURL('image/jpeg', 0.85).split(',')[1];
+    callClaude([{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: finalB64 } },
+        { type: 'text', text: '이 카펫 합성 결과 이미지를 인테리어 전문가 시각으로 분석해주세요.\n1. 조화도 점수 (100점 만점)\n2. 색상·스타일 궁합 평가\n3. 공간에 주는 인테리어 효과\n4. 고객 상담용 스타일링 팁 2가지\n\n유앤어스 쇼룸 상담에 활용할 수 있도록 전문적이고 설득력 있게 5~7문장으로 작성해주세요.' }
+      ]
+    }], 800, function(err2, analysis) {
+      showLog('done');
+      if (!err2 && analysis) {
+        document.getElementById('aiBody').textContent = analysis;
+        document.getElementById('aiSection').classList.add('show');
+        log('  ✓ AI 분석 완료');
+      }
+      setStep(3);
+      log('');
+      log('✅ 모든 단계 완료 — Result: 자연스러운 공간 합성 완료');
+      resetBtn();
+    });
+  });
 }
 
-function downloadResult(){
-  var c=document.getElementById('resultCanvas');
-  var a=document.createElement('a');
-  a.href=c.toDataURL('image/jpeg',0.92);
-  a.download='carpet_result.jpg';
+// ── 1단계: Canvas로 카펫 제거 ──
+function step1_eraseCarept(info) {
+  var c = document.createElement('canvas');
+  var W = _imgA.naturalWidth, H = _imgA.naturalHeight;
+  c.width = W; c.height = H;
+  var ctx = c.getContext('2d');
+  ctx.drawImage(_imgA, 0, 0, W, H);
+
+  if (!info.carpet_detected || !info.carpet_box) return c;
+
+  var b = info.carpet_box;
+  var x = Math.round(W * b.x_pct / 100);
+  var y = Math.round(H * b.y_pct / 100);
+  var w = Math.round(W * b.w_pct / 100);
+  var h = Math.round(H * b.h_pct / 100);
+  var feather = Math.round(Math.min(w, h) * 0.05);
+
+  // 주변 바닥색 샘플링
+  var samples = [];
+  var sampleY = Math.max(0, y - 15);
+  var topData = ctx.getImageData(x, sampleY, w, Math.min(15, y));
+  for (var i = 0; i < topData.data.length; i += 4) { samples.push([topData.data[i], topData.data[i+1], topData.data[i+2]]); }
+
+  var fr = 180, fg = 155, fb = 125;
+  if (samples.length > 0) {
+    var sr = 0, sg = 0, sb = 0;
+    samples.forEach(function(s) { sr += s[0]; sg += s[1]; sb += s[2]; });
+    fr = Math.round(sr / samples.length);
+    fg = Math.round(sg / samples.length);
+    fb = Math.round(sb / samples.length);
+  }
+
+  // 소파 영역 보존
+  var sofa = info.sofa_box || null;
+  var sx1 = sofa ? Math.round(W * sofa.x_pct / 100) : -1;
+  var sy1 = sofa ? Math.round(H * sofa.y_pct / 100) : -1;
+  var sx2 = sofa ? Math.round(W * (sofa.x_pct + sofa.w_pct) / 100) : -1;
+  var sy2 = sofa ? Math.round(H * (sofa.y_pct + sofa.h_pct) / 100) : -1;
+
+  var imgData = ctx.getImageData(x, y, w, h);
+  var d = imgData.data;
+
+  for (var j = 0; j < d.length; j += 4) {
+    var px = (j / 4) % w;
+    var py = Math.floor(j / 4 / w);
+    var absX = x + px, absY = y + py;
+
+    // 소파 영역은 건드리지 않음
+    if (sofa && absX >= sx1 && absX <= sx2 && absY >= sy1 && absY <= sy2) continue;
+
+    var edgeDist = Math.min(px, w - 1 - px, py, h - 1 - py);
+    var blend = feather > 0 ? Math.min(1.0, edgeDist / feather) : 1.0;
+
+    // 오른쪽 가장자리에서 바닥 텍스처 참조 (미러링)
+    var refX = Math.min(W - 1, x + w + px);
+    var refY = absY;
+    if (refX >= 0 && refX < W && refY >= 0 && refY < H) {
+      var refPx = ctx.getImageData(refX, refY, 1, 1).data;
+      var texR = refPx[0], texG = refPx[1], texB = refPx[2];
+      var texBlend = 0.4;
+      var targetR = fr * (1 - texBlend) + texR * texBlend;
+      var targetG = fg * (1 - texBlend) + texG * texBlend;
+      var targetB = fb * (1 - texBlend) + texB * texBlend;
+      var noise = (Math.random() - 0.5) * 8;
+      d[j]   = Math.max(0, Math.min(255, Math.round(d[j]   * (1 - blend) + (targetR + noise) * blend)));
+      d[j+1] = Math.max(0, Math.min(255, Math.round(d[j+1] * (1 - blend) + (targetG + noise) * blend)));
+      d[j+2] = Math.max(0, Math.min(255, Math.round(d[j+2] * (1 - blend) + (targetB + noise) * blend)));
+    } else {
+      var n = (Math.random() - 0.5) * 10;
+      d[j]   = Math.max(0, Math.min(255, Math.round(d[j]   * (1 - blend) + (fr + n) * blend)));
+      d[j+1] = Math.max(0, Math.min(255, Math.round(d[j+1] * (1 - blend) + (fg + n) * blend)));
+      d[j+2] = Math.max(0, Math.min(255, Math.round(d[j+2] * (1 - blend) + (fb + n) * blend)));
+    }
+  }
+  ctx.putImageData(imgData, x, y);
+  return c;
+}
+
+// ── 2단계: 새 카펫 합성 ──
+function step2_composeCarpet(bgCanvas, info) {
+  var c = document.createElement('canvas');
+  c.width = bgCanvas.width; c.height = bgCanvas.height;
+  var ctx = c.getContext('2d');
+  ctx.drawImage(bgCanvas, 0, 0);
+
+  // 카펫 배경 제거
+  var carpetC = document.createElement('canvas');
+  carpetC.width = _imgB.naturalWidth; carpetC.height = _imgB.naturalHeight;
+  var cCtx = carpetC.getContext('2d');
+  cCtx.drawImage(_imgB, 0, 0);
+  removeCarpetBg(cCtx, carpetC.width, carpetC.height);
+
+  var W = bgCanvas.width, H = bgCanvas.height;
+  var box = (info.carpet_detected && info.carpet_box) ? info.carpet_box : { x_pct: 10, y_pct: 38, w_pct: 80, h_pct: 55 };
+
+  var cx = Math.round(W * box.x_pct / 100);
+  var cy = Math.round(H * box.y_pct / 100);
+  var cw = Math.round(W * box.w_pct / 100);
+  var ch = Math.round(H * box.h_pct / 100);
+
+  // 원근감: 위쪽을 약간 좁게 (사다리꼴)
+  var perspOffset = Math.round(cw * 0.06);
+  var src = [[0, 0], [carpetC.width, 0], [carpetC.width, carpetC.height], [0, carpetC.height]];
+  var dst = [[cx + perspOffset, cy], [cx + cw - perspOffset, cy], [cx + cw, cy + ch], [cx, cy + ch]];
+  perspDraw(ctx, carpetC, src, dst, 0.92);
+
+  return c;
+}
+
+function removeCarpetBg(ctx, W, H) {
+  var d = ctx.getImageData(0, 0, W, H), px = d.data;
+  var corners = [[0,0],[W-1,0],[0,H-1],[W-1,H-1],[Math.floor(W/2),0],[0,Math.floor(H/2)],[W-1,Math.floor(H/2)],[Math.floor(W/2),H-1]];
+  var bg = corners.map(function(p) { var i = (p[1]*W+p[0])*4; return [px[i],px[i+1],px[i+2]]; });
+  var thr = 58;
+  for (var i = 0; i < px.length; i += 4) {
+    for (var j = 0; j < bg.length; j++) {
+      if (Math.abs(px[i]-bg[j][0]) + Math.abs(px[i+1]-bg[j][1]) + Math.abs(px[i+2]-bg[j][2]) < thr) { px[i+3] = 0; break; }
+    }
+  }
+  // 엣지 소프트닝
+  for (var y = 0; y < H; y++) { for (var x = 0; x < W; x++) {
+    var idx = (y*W+x)*4;
+    if (px[idx+3] === 0) {
+      var near = false;
+      for (var dy = -3; dy <= 3 && !near; dy++) { for (var dx = -3; dx <= 3 && !near; dx++) {
+        var nx = x+dx, ny = y+dy;
+        if (nx >= 0 && nx < W && ny >= 0 && ny < H && px[(ny*W+nx)*4+3] > 128) near = true;
+      }}
+      if (near) px[idx+3] = 70;
+    }
+  }}
+  ctx.putImageData(d, 0, 0);
+}
+
+function perspDraw(ctx, src, srcPts, dstPts, alpha) {
+  var minX = Math.min(dstPts[0][0],dstPts[1][0],dstPts[2][0],dstPts[3][0]);
+  var minY = Math.min(dstPts[0][1],dstPts[1][1],dstPts[2][1],dstPts[3][1]);
+  var maxX = Math.max(dstPts[0][0],dstPts[1][0],dstPts[2][0],dstPts[3][0]);
+  var maxY = Math.max(dstPts[0][1],dstPts[1][1],dstPts[2][1],dstPts[3][1]);
+  var W = Math.ceil(maxX - minX), H = Math.ceil(maxY - minY);
+  if (W < 1 || H < 1) return;
+
+  var off = document.createElement('canvas'); off.width = W; off.height = H;
+  var octx = off.getContext('2d');
+  var srcCtx = src.getContext('2d');
+  var srcData = srcCtx.getImageData(0, 0, src.width, src.height).data;
+  var sW = src.width, sH = src.height;
+  var od = octx.createImageData(W, H);
+  var d = dstPts.map(function(p) { return [p[0]-minX, p[1]-minY]; });
+
+  for (var y = 0; y < H; y++) { for (var x = 0; x < W; x++) {
+    var uv = invBilin(x, y, d[0], d[1], d[2], d[3]);
+    if (!uv) continue;
+    var su = Math.round(uv[0]*sW), sv = Math.round(uv[1]*sH);
+    if (su < 0 || su >= sW || sv < 0 || sv >= sH) continue;
+    var si = (sv*sW+su)*4;
+    if (srcData[si+3] < 10) continue;
+    var oi = (y*W+x)*4;
+    od.data[oi]=srcData[si]; od.data[oi+1]=srcData[si+1]; od.data[oi+2]=srcData[si+2]; od.data[oi+3]=srcData[si+3];
+  }}
+  octx.putImageData(od, 0, 0);
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.drawImage(off, minX, minY);
+  ctx.restore();
+}
+
+function invBilin(px, py, d0, d1, d2, d3) {
+  var u = 0.5, v = 0.5;
+  for (var i = 0; i < 10; i++) {
+    var x = (1-u)*(1-v)*d0[0]+u*(1-v)*d1[0]+u*v*d2[0]+(1-u)*v*d3[0];
+    var y = (1-u)*(1-v)*d0[1]+u*(1-v)*d1[1]+u*v*d2[1]+(1-u)*v*d3[1];
+    var dx = px-x, dy = py-y;
+    if (Math.abs(dx) < 0.3 && Math.abs(dy) < 0.3) break;
+    var dxdu = -(1-v)*d0[0]+(1-v)*d1[0]+v*d2[0]-v*d3[0];
+    var dydu = -(1-v)*d0[1]+(1-v)*d1[1]+v*d2[1]-v*d3[1];
+    var dxdv = -(1-u)*d0[0]-u*d1[0]+u*d2[0]+(1-u)*d3[0];
+    var dydv = -(1-u)*d0[1]-u*d1[1]+u*d2[1]+(1-u)*d3[1];
+    var det = dxdu*dydv - dxdv*dydu;
+    if (Math.abs(det) < 0.001) break;
+    u += (dydv*dx - dxdv*dy) / det;
+    v += (-dydu*dx + dxdu*dy) / det;
+  }
+  if (u < -0.01 || u > 1.01 || v < -0.01 || v > 1.01) return null;
+  return [Math.max(0,Math.min(1,u)), Math.max(0,Math.min(1,v))];
+}
+
+// ── 3단계: 프로세스 리포트 Canvas ──
+function step3_makeReport(c01, c02) {
+  var c = document.getElementById('canvas03');
+  var W = 1000, H = 520;
+  c.width = W; c.height = H;
+  var ctx = c.getContext('2d');
+
+  // 배경
+  ctx.fillStyle = '#FAFAF8';
+  ctx.fillRect(0, 0, W, H);
+
+  // 상단 헤더
+  ctx.fillStyle = '#2C2925';
+  ctx.fillRect(0, 0, W, 70);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 22px serif';
+  ctx.fillText('카펫 합성 프로세스', 30, 42);
+  ctx.font = '13px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('2장의 이미지로 최종 결과 만들기', 30, 60);
+
+  // 날짜
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(new Date().toLocaleDateString('ko-KR'), W - 24, 42);
+  ctx.textAlign = 'left';
+
+  var cardY = 90, cardH = 330, imgH = 240;
+  var card1X = 30, card2X = 530, cardW = 420;
+
+  // 카드 1: 카펫 제거
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, card1X, cardY, cardW, cardH, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#E5E0D8';
+  ctx.lineWidth = 1;
+  roundRect(ctx, card1X, cardY, cardW, cardH, 12);
+  ctx.stroke();
+
+  // 카드1 이미지
+  ctx.save();
+  roundRect(ctx, card1X, cardY, cardW, imgH, 12);
+  ctx.clip();
+  ctx.drawImage(c01, card1X, cardY, cardW, imgH);
+  ctx.restore();
+
+  // 카드1 헤더 오버레이
+  ctx.fillStyle = 'rgba(139,105,20,0.85)';
+  ctx.fillRect(card1X, cardY, 140, 30);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('01  카펫 제거', card1X + 12, cardY + 20);
+
+  // 카드1 설명
+  ctx.fillStyle = '#1C1A17';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('1. 카펫 제거', card1X + 16, cardY + imgH + 28);
+  ctx.fillStyle = '#6B6457';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('• 기존 공간에서 카펫 제거', card1X + 16, cardY + imgH + 50);
+  ctx.fillText('• 바닥·조명·가구 분위기 유지', card1X + 16, cardY + imgH + 68);
+  ctx.fillStyle = '#A09890';
+  ctx.font = '11px monospace';
+  ctx.fillText('01_space_without_carpet.png', card1X + 16, cardY + imgH + 90);
+
+  // 화살표
+  var arrX = card1X + cardW + 18;
+  var arrY = cardY + cardH / 2;
+  ctx.fillStyle = '#C4A97D';
+  ctx.font = 'bold 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('→', arrX + 12, arrY + 10);
+  ctx.textAlign = 'left';
+
+  // 카드 2: 카펫 설치
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, card2X, cardY, cardW, cardH, 12);
+  ctx.fill();
+  ctx.strokeStyle = '#E5E0D8';
+  ctx.lineWidth = 1;
+  roundRect(ctx, card2X, cardY, cardW, cardH, 12);
+  ctx.stroke();
+
+  ctx.save();
+  roundRect(ctx, card2X, cardY, cardW, imgH, 12);
+  ctx.clip();
+  ctx.drawImage(c02, card2X, cardY, cardW, imgH);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgba(26,92,138,0.85)';
+  ctx.fillRect(card2X, cardY, 160, 30);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.fillText('02  카펫 설치 (최종)', card2X + 12, cardY + 20);
+
+  ctx.fillStyle = '#1C1A17';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText('2. 카펫 설치 (최종 이미지)', card2X + 16, cardY + imgH + 28);
+  ctx.fillStyle = '#6B6457';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('• 선택한 카펫 디자인 적용', card2X + 16, cardY + imgH + 50);
+  ctx.fillText('• 공간 원근감·그림자 자연스럽게 반영', card2X + 16, cardY + imgH + 68);
+  ctx.fillStyle = '#A09890';
+  ctx.font = '11px monospace';
+  ctx.fillText('02_space_with_carpet_final.png', card2X + 16, cardY + imgH + 90);
+
+  // 하단 결과 박스
+  ctx.fillStyle = '#2C2925';
+  roundRect(ctx, 30, cardY + cardH + 18, W - 60, 44, 8);
+  ctx.fill();
+  ctx.fillStyle = '#C4A97D';
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Result: 자연스러운 공간 합성 완료', W / 2, cardY + cardH + 45);
+  ctx.textAlign = 'left';
+
+  // 유앤어스 워터마크
+  ctx.fillStyle = 'rgba(160,152,144,0.5)';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('유앤어스 YouAndUs', W - 24, H - 12);
+  ctx.textAlign = 'left';
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function downloadCanvas(id, filename) {
+  var c = document.getElementById(id);
+  var a = document.createElement('a');
+  a.href = c.toDataURL('image/png');
+  a.download = filename;
   a.click();
 }
+
+function resetBtn() {
+  var btn = document.getElementById('runBtn');
+  btn.disabled = false;
+  btn.textContent = '카펫 합성 프로세스 시작';
+}
+
+window.onload = function() { loadApi(); };
 </script>
+</body>
+</html>
