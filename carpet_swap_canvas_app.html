@@ -1,0 +1,288 @@
+
+<h2 class="sr-only">카펫 교체 앱 — 제품1 배경에 제품2 카펫 텍스처를 Canvas로 합성</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{padding:20px;color:var(--color-text-primary);font-size:14px}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.hdr-title{font-size:16px;font-weight:500}
+.hdr-badge{font-size:11px;padding:3px 8px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-secondary)}
+
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.uzone{border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);min-height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;background:var(--color-background-primary);transition:border-color 0.15s}
+.uzone:hover{border-color:var(--color-border-primary)}
+.uzone.loaded{border-style:solid;border-color:var(--color-border-success)}
+.uzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uzone img{width:100%;height:120px;object-fit:cover;display:block}
+.zfoot{width:100%;padding:8px 12px;background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary)}
+.zlbl{font-size:11px;font-weight:500;color:var(--color-text-success)}
+.zhint{font-size:11px;color:var(--color-text-tertiary);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zph{text-align:center;padding:20px 12px}
+.zph-icon{font-size:22px;color:var(--color-text-tertiary);margin-bottom:8px}
+.zph-lbl{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:3px}
+.zph-hint{font-size:11px;color:var(--color-text-tertiary)}
+
+.controls{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:16px;display:grid;gap:12px}
+.ctrl-row{display:flex;align-items:center;gap:12px}
+.ctrl-lbl{font-size:12px;color:var(--color-text-secondary);width:80px;flex-shrink:0}
+.ctrl-row input[type=range]{flex:1}
+.ctrl-val{font-size:12px;font-weight:500;min-width:32px;text-align:right;color:var(--color-text-primary)}
+
+.blend-btns{display:flex;gap:6px;flex-wrap:wrap}
+.blend-btn{font-size:11px;padding:4px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);cursor:pointer;color:var(--color-text-secondary);transition:all 0.1s}
+.blend-btn.sel{border-color:var(--color-border-info);background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+
+.run-btn{width:100%;padding:13px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:14px;font-weight:500;cursor:pointer;color:var(--color-text-primary);margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:8px;transition:background 0.15s}
+.run-btn:not(:disabled):hover{background:var(--color-background-secondary)}
+.run-btn:not(:disabled):active{transform:scale(0.98)}
+.run-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.err{border:0.5px solid var(--color-border-danger);border-radius:var(--border-radius-md);background:var(--color-background-danger);padding:10px 12px;font-size:12px;color:var(--color-text-danger);margin-bottom:12px;display:none}
+.err.show{display:block}
+
+.result-wrap{display:none;margin-bottom:12px}
+.result-wrap.show{display:block}
+.result-lbl{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:0.4px;margin-bottom:8px}
+.result-card{border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);overflow:hidden}
+.result-card canvas{width:100%;display:block;max-height:320px;object-fit:contain}
+.result-foot{padding:10px 14px;background:var(--color-background-success);display:flex;align-items:center;justify-content:space-between}
+.result-foot-txt{font-size:12px;color:var(--color-text-success);font-weight:500}
+.dl-btn{background:none;border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:6px 12px;font-size:12px;color:var(--color-text-success);cursor:pointer;display:flex;align-items:center;gap:5px}
+.dl-btn:hover{background:var(--color-background-primary)}
+
+.ai-section{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px;display:none}
+.ai-section.show{display:block}
+.ai-head{padding:10px 14px;background:var(--color-background-secondary);font-size:12px;font-weight:500;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px}
+.ai-body{padding:12px 14px;font-size:12px;color:var(--color-text-secondary);line-height:1.7}
+
+.spinner{width:13px;height:13px;border:2px solid var(--color-border-info);border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<div class="app">
+  <div class="hdr">
+    <i class="ti ti-replace" style="font-size:20px;color:var(--color-text-secondary)" aria-hidden="true"></i>
+    <span class="hdr-title">카펫 교체 AI</span>
+    <span class="hdr-badge">Canvas 합성 + Claude 분석</span>
+  </div>
+
+  <div class="upload-grid">
+    <div class="uzone" id="zone1">
+      <input type="file" accept="image/*" onchange="handleFile(event,1)">
+      <div id="z1ph" class="zph">
+        <div class="zph-icon"><i class="ti ti-home" aria-hidden="true"></i></div>
+        <div class="zph-lbl">제품 1 · 배경 공간</div>
+        <div class="zph-hint">카펫 교체할 공간 사진</div>
+      </div>
+      <div id="z1ld" style="display:none;width:100%">
+        <img id="z1img" src="" alt="제품1">
+        <div class="zfoot">
+          <div class="zlbl"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> 제품 1</div>
+          <div class="zhint" id="z1nm"></div>
+        </div>
+      </div>
+    </div>
+    <div class="uzone" id="zone2">
+      <input type="file" accept="image/*" onchange="handleFile(event,2)">
+      <div id="z2ph" class="zph">
+        <div class="zph-icon"><i class="ti ti-texture" aria-hidden="true"></i></div>
+        <div class="zph-lbl">제품 2 · 카펫</div>
+        <div class="zph-hint">새로 배치할 카펫 사진</div>
+      </div>
+      <div id="z2ld" style="display:none;width:100%">
+        <img id="z2img" src="" alt="제품2">
+        <div class="zfoot">
+          <div class="zlbl"><i class="ti ti-check" style="font-size:11px" aria-hidden="true"></i> 제품 2</div>
+          <div class="zhint" id="z2nm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">카펫 불투명도</span>
+      <input type="range" min="10" max="100" value="70" step="1" oninput="document.getElementById('opVal').textContent=this.value+'%';previewIfReady()" id="opSlider">
+      <span class="ctrl-val" id="opVal">70%</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">카펫 크기</span>
+      <input type="range" min="20" max="100" value="60" step="1" oninput="document.getElementById('szVal').textContent=this.value+'%';previewIfReady()" id="szSlider">
+      <span class="ctrl-val" id="szVal">60%</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-lbl">블렌드 모드</span>
+      <div class="blend-btns">
+        <button type="button" class="blend-btn sel" onclick="selectBlend(this,'multiply')">Multiply</button>
+        <button type="button" class="blend-btn" onclick="selectBlend(this,'overlay')">Overlay</button>
+        <button type="button" class="blend-btn" onclick="selectBlend(this,'source-over')">Normal</button>
+        <button type="button" class="blend-btn" onclick="selectBlend(this,'luminosity')">Luminosity</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="run-btn" id="runBtn" onclick="runAll()" disabled>
+    <i class="ti ti-sparkles" aria-hidden="true"></i>
+    카펫 교체 + AI 분석
+  </button>
+
+  <div class="err" id="errBar"></div>
+
+  <div class="result-wrap" id="resultWrap">
+    <div class="result-lbl">합성 결과</div>
+    <div class="result-card">
+      <canvas id="resultCanvas"></canvas>
+      <div class="result-foot">
+        <span class="result-foot-txt"><i class="ti ti-check" aria-hidden="true"></i> 합성 완료</span>
+        <button type="button" class="dl-btn" onclick="downloadResult()">
+          <i class="ti ti-download" aria-hidden="true"></i> 다운로드
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-section" id="aiSection">
+    <div class="ai-head" id="aiHead">
+      <i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i>
+      AI 인테리어 분석
+    </div>
+    <div class="ai-body" id="aiBody"></div>
+  </div>
+</div>
+
+<script>
+var _img1=null,_img2=null,_b1='',_b2='',_t1='image/jpeg',_t2='image/jpeg';
+var _blendMode='multiply';
+
+function handleFile(ev,num){
+  var f=ev.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    var src=e.target.result,b64=src.split(',')[1];
+    var img=new Image();
+    img.onload=function(){
+      if(num===1){
+        _img1=img;_b1=b64;_t1=f.type||'image/jpeg';
+        document.getElementById('z1img').src=src;
+        document.getElementById('z1nm').textContent=f.name;
+        document.getElementById('z1ph').style.display='none';
+        document.getElementById('z1ld').style.display='block';
+        document.getElementById('zone1').classList.add('loaded');
+      } else {
+        _img2=img;_b2=b64;_t2=f.type||'image/jpeg';
+        document.getElementById('z2img').src=src;
+        document.getElementById('z2nm').textContent=f.name;
+        document.getElementById('z2ph').style.display='none';
+        document.getElementById('z2ld').style.display='block';
+        document.getElementById('zone2').classList.add('loaded');
+      }
+      checkReady();
+      previewIfReady();
+    };
+    img.src=src;
+  };
+  r.readAsDataURL(f);
+}
+
+function checkReady(){
+  document.getElementById('runBtn').disabled=!(_img1&&_img2);
+}
+
+function selectBlend(btn,mode){
+  document.querySelectorAll('.blend-btn').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');
+  _blendMode=mode;
+  previewIfReady();
+}
+
+function previewIfReady(){
+  if(!_img1||!_img2)return;
+  composite(false);
+}
+
+function composite(showResult){
+  var c=document.getElementById('resultCanvas');
+  var W=_img1.naturalWidth,H=_img1.naturalHeight;
+  c.width=W;c.height=H;
+  var ctx=c.getContext('2d');
+
+  ctx.drawImage(_img1,0,0,W,H);
+
+  var op=parseInt(document.getElementById('opSlider').value)/100;
+  var sz=parseInt(document.getElementById('szSlider').value)/100;
+
+  var cw=Math.round(W*sz);
+  var ch=Math.round(H*sz*0.55);
+  var cx=Math.round((W-cw)/2);
+  var cy=Math.round(H*0.38);
+
+  ctx.save();
+  ctx.globalAlpha=op;
+  ctx.globalCompositeOperation=_blendMode;
+
+  var offC=document.createElement('canvas');
+  offC.width=cw;offC.height=ch;
+  var offCtx=offC.getContext('2d');
+  offCtx.drawImage(_img2,0,0,cw,ch);
+
+  ctx.drawImage(offC,cx,cy,cw,ch);
+  ctx.restore();
+
+  if(showResult){
+    document.getElementById('resultWrap').classList.add('show');
+  }
+}
+
+function runAll(){
+  document.getElementById('errBar').classList.remove('show');
+  composite(true);
+  callAI();
+}
+
+function callAI(){
+  var sec=document.getElementById('aiSection');
+  var head=document.getElementById('aiHead');
+  var body=document.getElementById('aiBody');
+  sec.classList.add('show');
+  head.innerHTML='<span class="spinner"></span> AI 분석 중...';
+  body.textContent='';
+
+  var prompt='두 인테리어 이미지를 보고 있습니다.\n첫 번째: 카펫이 있는 공간\n두 번째: 새 카펫 제품\n\n인테리어 전문가로서 이 카펫 교체의 결과를 분석해주세요:\n1. 공간과 카펫의 색상·스타일 조화도 (100점 만점)\n2. 이 조합의 장점 2가지\n3. 스타일링 팁 2가지\n\n간결하게 4~6문장으로 답해주세요.';
+
+  var xhr=new XMLHttpRequest();
+  xhr.open('POST','https://api.anthropic.com/v1/messages',true);
+  xhr.setRequestHeader('Content-Type','application/json');
+  xhr.onload=function(){
+    try{
+      var r=JSON.parse(xhr.responseText);
+      var txt='';
+      for(var i=0;i<r.content.length;i++){if(r.content[i].type==='text')txt+=r.content[i].text;}
+      head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
+      body.textContent=txt;
+    }catch(e){
+      head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
+      body.textContent='분석 결과를 불러오지 못했습니다.';
+    }
+  };
+  xhr.onerror=function(){
+    head.innerHTML='<i class="ti ti-sparkles" style="font-size:13px" aria-hidden="true"></i> AI 인테리어 분석';
+    body.textContent='네트워크 오류로 분석을 가져오지 못했습니다.';
+  };
+  xhr.send(JSON.stringify({
+    model:'claude-sonnet-4-20250514',
+    max_tokens:1000,
+    messages:[{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:_t1,data:_b1}},
+      {type:'image',source:{type:'base64',media_type:_t2,data:_b2}},
+      {type:'text',text:prompt}
+    ]}]
+  }));
+}
+
+function downloadResult(){
+  var c=document.getElementById('resultCanvas');
+  var a=document.createElement('a');
+  a.href=c.toDataURL('image/jpeg',0.92);
+  a.download='carpet_result.jpg';
+  a.click();
+}
+</script>
