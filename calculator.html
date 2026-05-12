@@ -32,7 +32,7 @@ header{position:relative;text-align:center;padding:28px 20px 22px;margin-bottom:
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .field{display:flex;flex-direction:column;gap:5px;}
 .flabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;}
-select,input[type=number],input[type=text]{font-family:'Noto Sans KR',sans-serif;font-weight:400;font-size:13px;color:#000;background:#fff;border:1px solid #ccc;padding:7px 10px;outline:none;width:100%;-webkit-appearance:none;transition:border-color .15s,background .15s;border-radius:0;}
+select,input[type=number],input[type=text]{font-family:'Noto Sans KR',sans-serif;font-weight:400;font-size:16px;color:#000;background:#fff;border:1px solid #ccc;padding:7px 10px;outline:none;width:100%;-webkit-appearance:none;transition:border-color .15s,background .15s;border-radius:0;-webkit-user-select:text;user-select:text;}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;}
 select:focus,input:focus{border-color:#000;}
 select:disabled{color:#ccc;background:#fafafa;}
@@ -219,6 +219,14 @@ input.error{border-color:#c00!important;background:#fff8f8!important;}
 .channel-bar.minimized{display:none;}
 .b2c-notice.minimized{display:none!important;}
 
+
+/* iPad Safari 키보드 및 줌 방지 */
+@media screen and (-webkit-min-device-pixel-ratio:0){
+  select, input[type=text], input[type=number]{
+    font-size:16px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -292,15 +300,15 @@ input.error{border-color:#c00!important;background:#fff8f8!important;}
           </div>
           <div>
             <div class="manual-label">단가 (원/m²)</div>
-            <div class="iwrap"><input type="number" id="mnPrice" placeholder="0" min="0"/><span class="iunit">원</span></div>
+            <div class="iwrap"><input type="text" inputmode="decimal" id="mnPrice" placeholder="0" autocomplete="off"/><span class="iunit">원</span></div>
           </div>
           <div>
             <div class="manual-label">가로 (cm)</div>
-            <div class="iwrap"><input type="number" id="mnW" placeholder="" min="1"/><span class="iunit">cm</span></div>
+            <div class="iwrap"><input type="text" inputmode="decimal" id="mnW" placeholder="" autocomplete="off"/><span class="iunit">cm</span></div>
           </div>
           <div>
             <div class="manual-label">세로 (cm)</div>
-            <div class="iwrap"><input type="number" id="mnH" placeholder="" min="1"/><span class="iunit">cm</span></div>
+            <div class="iwrap"><input type="text" inputmode="decimal" id="mnH" placeholder="" autocomplete="off"/><span class="iunit">cm</span></div>
           </div>
         </div>
         <div>
@@ -370,12 +378,12 @@ input.error{border-color:#c00!important;background:#fff8f8!important;}
         <div class="srow">
           <div class="sfield">
             <div class="flabel">가로 (cm)</div>
-            <div class="iwrap"><input type="number" id="inW" placeholder="" min="1"/><span class="iunit">cm</span></div>
+            <div class="iwrap"><input type="text" inputmode="decimal" id="inW" placeholder="" autocomplete="off"/><span class="iunit">cm</span></div>
             <div class="err-toast" id="errW">가로는 Full Width(선택한 폭)를 초과할 수 없습니다</div>
           </div>
           <div class="sfield">
             <div class="flabel">세로 (cm)</div>
-            <div class="iwrap"><input type="number" id="inH" placeholder="" min="1"/><span class="iunit">cm</span></div>
+            <div class="iwrap"><input type="text" inputmode="decimal" id="inH" placeholder="" autocomplete="off"/><span class="iunit">cm</span></div>
           </div>
         </div>
         <!-- 수량 -->
